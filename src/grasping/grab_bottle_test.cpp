@@ -10,17 +10,17 @@
 
 #include <manipulation_msgs/GraspPlanning.h>
 
+bool GRIPPER_TEST = false;
+
 class GrabBottleTest{
 
 protected:
     ros::NodeHandle node_handle;
     ros::ServiceClient planning_scene_diff_client;
     ros::ServiceClient grasp_planning_service;
-    moveit::planning_interface::MoveGroup arm;
 
 public:
-    GrabBottleTest() :
-        arm("arm")
+    GrabBottleTest()
     {
         planning_scene_diff_client = node_handle.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
         planning_scene_diff_client.waitForExistence();
@@ -29,12 +29,11 @@ public:
     ~GrabBottleTest(){
     }
 
-    bool executePick(){
-        arm.setPlanningTime(20.0);
+    bool executePick(moveit::planning_interface::MoveGroup& arm){
         arm.setSupportSurfaceName("table");
         return arm.planGraspsAndPick("object");
     }
-
+/*
     bool executePick(moveit_msgs::CollisionObject &object){
         arm.setPlanningTime(20.0);
         arm.setSupportSurfaceName("table");
@@ -75,7 +74,27 @@ public:
         arm.setSupportSurfaceName("table");
         arm.place("object", location);
     }
+*/
 
+    void despawnObject(){
+        moveit_msgs::ApplyPlanningScene srv;
+        moveit_msgs::PlanningScene planning_scene;
+        planning_scene.is_diff = true;
+        planning_scene.robot_state.is_diff = true;
+
+        moveit_msgs::AttachedCollisionObject aobj;
+        aobj.object.id = "object";
+        aobj.object.operation = aobj.object.REMOVE;
+        planning_scene.robot_state.attached_collision_objects.push_back(aobj);
+
+        moveit_msgs::CollisionObject object;
+        object.id = "object";
+        object.operation = object.REMOVE;
+        planning_scene.world.collision_objects.push_back(object);
+        srv.request.scene = planning_scene;
+        planning_scene_diff_client.call(srv);
+    }
+          
     moveit_msgs::CollisionObject spawnObject(){
         moveit_msgs::ApplyPlanningScene srv;
         moveit_msgs::PlanningScene planning_scene;
@@ -106,11 +125,11 @@ public:
         planning_scene.world.collision_objects.push_back(object);
 
         // remove attached object in case it is attached
-        moveit_msgs::AttachedCollisionObject aco;
+     /*   moveit_msgs::AttachedCollisionObject aco;
         object.operation = object.REMOVE;
         aco.object = object;
         planning_scene.robot_state.attached_collision_objects.push_back(aco);
-
+*/
         srv.request.scene = planning_scene;
         planning_scene_diff_client.call(srv);
 
@@ -127,7 +146,7 @@ public:
            grasp_pose.points[0].positions.push_back(it->second);
        }
     }
-
+/*
     void testPose(){
 
         geometry_msgs::PoseStamped pose;
@@ -144,7 +163,7 @@ public:
         arm.setPoseTarget(pose, "tool0");
         arm.move();
     }
-
+*/
 };
 
 int main(int argc, char** argv){
@@ -153,21 +172,43 @@ int main(int argc, char** argv){
     spinner.start();
 
     moveit::planning_interface::MoveGroup gripper("gripper");
-    gripper.setNamedTarget("closed");
+    moveit::planning_interface::MoveGroup arm("arm");
+
+    //arm.setPlannerId(arm.getDefaultPlannerId("arm"));
+    arm.setPlannerId("RRTConnectkConfigDefault");
+    arm.setPlanningTime(20.0);
+
+    if(GRIPPER_TEST) {
+        gripper.setNamedTarget("basic_closed");
+        gripper.move();
+        ros::Duration(5.0).sleep();
+        gripper.setNamedTarget("basic_open");
+        gripper.move();
+        return 0;
+    }
+
+    ROS_INFO("Starting Test");
+    GrabBottleTest testClass;
+
+    testClass.despawnObject();
+
+    gripper.setNamedTarget("basic_open");
     gripper.move();
+    arm.setNamedTarget("folded");
+    arm.move();
+
     ros::Duration(5.0).sleep();
-    gripper.setNamedTarget("open");
-    gripper.move();
+    ROS_INFO("Spawn Object");
+    testClass.spawnObject();
 
-    //ROS_INFO("Starting Test");
-    //GrabBottleTest testClass;
-    //ROS_INFO("Spawn Object");
-
-    //moveit_msgs::CollisionObject object = testClass.spawnObject();
-
-    //ROS_INFO("Grab Bottle");
-    //testClass.executePick();
-    //testClass.executePick(object);
-
-    return 0;
+    ROS_INFO("Grab Bottle");
+    bool succeeded = testClass.executePick(arm);
+    if (succeeded){
+      ROS_INFO("Execute pick succeded");
+      return 0;
+    }
+    else {
+      ROS_ERROR("Execute pick failed");
+      return 1;
+    }
 }

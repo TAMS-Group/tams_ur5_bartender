@@ -25,8 +25,8 @@ bool serviceCB(moveit_msgs::GraspPlanning::Request &req, moveit_msgs::GraspPlann
   moveit_msgs::Grasp grasp;
   grasp.id = "grasp";
 
-  jointValuesToJointTrajectory(gripper.getNamedTargetValues("open"), ros::Duration(1.0), grasp.pre_grasp_posture);
-  jointValuesToJointTrajectory(gripper.getNamedTargetValues("closed"), ros::Duration(2.0), grasp.grasp_posture);
+  jointValuesToJointTrajectory(gripper.getNamedTargetValues("basic_open"), ros::Duration(3.0), grasp.pre_grasp_posture);
+  jointValuesToJointTrajectory(gripper.getNamedTargetValues("basic_closed"), ros::Duration(3.0), grasp.grasp_posture);
 
   geometry_msgs::PoseStamped pose;
   pose.header.frame_id = req.target.id;
