@@ -1,14 +1,20 @@
 #include <iostream>
 #include <stdio.h>
 
+
+#include <ros/ros.h>
+
 #include <moveit/move_group_interface/move_group.h>
 
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
 #include <moveit_msgs/Grasp.h>
+#include <moveit_msgs/DisplayTrajectory.h>
+
 
 #include <manipulation_msgs/GraspPlanning.h>
+#include <math.h>
 
 class PourBottleTest{
 	struct objectDescription {
@@ -94,7 +100,11 @@ int main(int argc, char** argv){
 	moveit::planning_interface::MoveGroup gripper("gripper");
 	moveit::planning_interface::MoveGroup arm("arm");
 
-	//arm.setPlannerId(arm.getDefaultPlannerId("arm"));
+
+	arm.setNamedTarget("folded");
+	arm.move();
+	sleep(2.0);
+
 	arm.setPlannerId("RRTConnectkConfigDefault");
 	arm.setPlanningTime(20.0);
 
@@ -105,9 +115,48 @@ int main(int argc, char** argv){
 	moveit_msgs::CollisionObject glas = testClass.spawnObject("glas", "table_top");
 
 	std::string endeffectorLink = arm.getEndEffectorLink().c_str();
-	testClass.spawnObject("bottle", endeffectorLink);
-	gripper.attachObject("bottle",endeffectorLink);
+	//testClass.spawnObject("bottle", endeffectorLink);
+	//gripper.attachObject("bottle", endeffectorLink);
 	sleep(2.0);
+
+	// waypoints for pouring motion
+	std::vector<geometry_msgs::Pose> waypoints;
+	geometry_msgs::Pose glass_pose;
+	glass_pose.orientation.w = 1.0;
+	glass_pose.position.x = 0.1;
+	glass_pose.position.y = 0.1;
+	glass_pose.position.z = 0.2;
+
+	arm.setPoseReferenceFrame("table_top");
+	arm.setPoseTarget(glass_pose);
+	arm.move();
+	sleep(2);
+
+	arm.setPoseReferenceFrame("world");
+	geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
+	geometry_msgs::Pose target_pose = start_pose;
+	waypoints.push_back(start_pose);
+	for(int i = 1; i < 10; i++) {
+		float angle = M_PI * i / 10;
+		ROS_INFO_STREAM("computing waypoint for angle " << angle);
+		target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(angle, 0, 0);
+		target_pose.position.x += 0.02;
+		waypoints.push_back(target_pose);
+	}
+
+	//for(int i = 0; i < waypoints.size(); i++) {
+	//	arm.setPoseTarget(waypoints[i]);
+	//	arm.move();
+	//	sleep(2.0);
+	//}
+	moveit_msgs::RobotTrajectory trajectory;
+	double fraction = arm.computeCartesianPath(waypoints, 0.01, 1000, trajectory);
+	ROS_INFO("Visualizing plan 4 (cartesian path) (%.2f%% acheived)", fraction * 100.0);
+	sleep(5.0);
+
+	moveit::planning_interface::MoveGroup::Plan pouring_plan;
+	pouring_plan.trajectory_ = trajectory;
+	arm.execute(pouring_plan);
 
 // TODO 
 // define frame for the bottle opening
@@ -117,10 +166,6 @@ int main(int argc, char** argv){
 // THINGS TO CONSIDER
 // predefined trajectory, but how to control the speed? 
 	
-	ROS_INFO_STREAM( "OBJECT INFORMATION " << glas ); 
-	
-	ROS_INFO_STREAM( "OBJECT INFORMATION " << glas.primitive_poses[0].position.x ); 
-
 
 /*
 	// fails when bottle added as collision object because full closing cannot be performed
