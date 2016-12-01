@@ -29,3 +29,6 @@ target_link_libraries(grab_bottle_demo ${catkin_LIBRARIES})
 add_executable(grasp_planning_service src/grasping/grasp_planning_service.cpp)
 target_link_libraries(grasp_planning_service ${catkin_LIBRARIES})
 
+add_executable(pour_bottle_test src/pouring/pour_bottle_test.cpp)
+target_link_libraries(pour_bottle_test ${catkin_LIBRARIES})
+
