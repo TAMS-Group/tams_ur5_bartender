@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <stdio.h>
 
 
@@ -27,15 +28,16 @@ class PourBottleTest{
 		ros::NodeHandle node_handle;
 		ros::ServiceClient planning_scene_diff_client;
 		ros::ServiceClient grasp_planning_service;
-		std::map<std::string, objectDescription> object_map;
 
 	public:
+		std::map<std::string, objectDescription> object_map;
+
 		PourBottleTest()
 		{
 			objectDescription glas = {{0, 0.03, 0.12}, {0.1, 0.1, 0.05}};
 			object_map["glas"] = glas;
 			
-			objectDescription bottle = {{0, 0.04, 0.3}, {0, 0, 0}};// {-0.1, -0.1, 0}};
+			objectDescription bottle = {{0, 0.04, 0.3}, {.01, 0, 0}};// {-0.1, -0.1, 0}};
 			object_map["bottle"] = bottle;
 			
 			planning_scene_diff_client = node_handle.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
@@ -89,6 +91,9 @@ class PourBottleTest{
         return object;
     }
 
+void executePouring() {
+}
+
 
 };
 
@@ -115,9 +120,6 @@ int main(int argc, char** argv){
 	moveit_msgs::CollisionObject glas = testClass.spawnObject("glas", "table_top");
 
 	std::string endeffectorLink = arm.getEndEffectorLink().c_str();
-	//testClass.spawnObject("bottle", endeffectorLink);
-	//gripper.attachObject("bottle", endeffectorLink);
-	sleep(2.0);
 
 	// waypoints for pouring motion
 	std::vector<geometry_msgs::Pose> waypoints;
@@ -125,38 +127,67 @@ int main(int argc, char** argv){
 	glass_pose.orientation.w = 1.0;
 	glass_pose.position.x = 0.1;
 	glass_pose.position.y = 0.1;
-	glass_pose.position.z = 0.2;
+	glass_pose.position.z = 0.3;
 
 	arm.setPoseReferenceFrame("table_top");
 	arm.setPoseTarget(glass_pose);
 	arm.move();
+	testClass.spawnObject("bottle", endeffectorLink);
+	gripper.attachObject("bottle", endeffectorLink);
 	sleep(2);
 
 	arm.setPoseReferenceFrame("world");
 	geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
+
 	geometry_msgs::Pose target_pose = start_pose;
-	waypoints.push_back(start_pose);
-	for(int i = 1; i < 10; i++) {
-		float angle = M_PI * i / 10;
+
+	waypoints.push_back(start_pose); // first point of trajectory - necessary?
+
+	//pouring is described in a circular motion
+	int steps = 10; //number of waypoints
+	float pScale = 0.6; //max pouring angle in percent (100% is M_PI)
+	float radius = testClass.object_map["bottle"].dim[2] / 2; //radius is half the bottle height
+	float startZ = start_pose.position.z; 
+	float startY = start_pose.position.y;
+	for(int i = 0; i <= steps; i++) {
+		float angle = pScale * M_PI * i / steps;
 		ROS_INFO_STREAM("computing waypoint for angle " << angle);
-		target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(angle, 0, 0);
-		target_pose.position.x += 0.02;
+		target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(angle, 0, 0); //rotate around X-axis
+		//linear translation described by sine and cosine
+		target_pose.position.y = startY + sin(angle) * radius;
+		target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * i * pScale / steps ) * radius;
 		waypoints.push_back(target_pose);
 	}
+	
+	moveit::planning_interface::MoveGroup::Plan pour_forward;
+	moveit::planning_interface::MoveGroup::Plan pour_backward;
 
-	//for(int i = 0; i < waypoints.size(); i++) {
-	//	arm.setPoseTarget(waypoints[i]);
-	//	arm.move();
-	//	sleep(2.0);
-	//}
 	moveit_msgs::RobotTrajectory trajectory;
-	double fraction = arm.computeCartesianPath(waypoints, 0.01, 1000, trajectory);
-	ROS_INFO("Visualizing plan 4 (cartesian path) (%.2f%% acheived)", fraction * 100.0);
-	sleep(5.0);
+	moveit_msgs::RobotTrajectory trajectory_back;
+	double fraction = -1.0;
+	double fraction_back = -1.0;
 
-	moveit::planning_interface::MoveGroup::Plan pouring_plan;
-	pouring_plan.trajectory_ = trajectory;
-	arm.execute(pouring_plan);
+	while(ros::ok()) {
+		// Pour forward trajectory
+		if(fraction < 0.0) {
+			fraction = arm.computeCartesianPath(waypoints, 0.01, 10, trajectory);
+			pour_forward.trajectory_ = trajectory;
+			ROS_INFO("Pouring trajectory (%.2f%% acheived)", fraction * 100.0);
+		} 
+		arm.execute(pour_forward);
+
+		sleep(5.0);
+
+		// Pour back trajectory
+		if(fraction_back < 0.0) {
+			std::reverse(waypoints.begin(), waypoints.end());
+			fraction_back = arm.computeCartesianPath(waypoints, 0.01, 15, trajectory_back);
+			pour_backward.trajectory_ = trajectory_back;
+			ROS_INFO("Back movement trajectory (cartesian path) (%.2f%% acheived)", fraction_back * 100.0);
+		}
+		arm.execute(pour_backward);
+		sleep(3.0);
+	}
 
 // TODO 
 // define frame for the bottle opening
