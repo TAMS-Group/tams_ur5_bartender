@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     <include file="$(find tams_ur5_setup_bringup)/launch/tams_ur5_setup.launch" />
+
+    <node pkg="project16_manipulation" type="grasp_planning_service" name="plan_grasps_service" />
+<!--
     <include file="$(find project15_objectrecognition)/launch/object_detector.launch" />
 
     <node pkg="tams_ur5_pick_place" type="plan_grasps_service" name="plan_grasps_service" />
+-->
 </launch>
 
