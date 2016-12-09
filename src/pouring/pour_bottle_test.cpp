@@ -130,8 +130,20 @@ int main(int argc, char** argv){
 	glass_pose.position.z = 0.3;
 
 	arm.setPoseReferenceFrame("table_top");
+	// shoulder constraint so that the arm is 'elbow up'
+    //moveit_msgs::Constraints constraints;	
+	//moveit_msgs::JointConstraint shoulder_const;
+	//shoulder_const.joint_name = "ur5_shoulder_pan_joint";
+	//shoulder_const.position = 0.0;
+	//shoulder_const.tolerance_above = 2 * M_PI;
+	//shoulder_const.tolerance_below = 2 * M_PI;
+	//shoulder_const.weight = 1.0;
+	//constraints.joint_constraints.push_back(shoulder_const);
+	//arm.setPathConstraints(constraints);
+
 	arm.setPoseTarget(glass_pose);
 	arm.move();
+	//arm.clearPathConstraints();
 	testClass.spawnObject("bottle", endeffectorLink);
 	gripper.attachObject("bottle", endeffectorLink);
 	sleep(2);
@@ -155,7 +167,7 @@ int main(int argc, char** argv){
 		target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(angle, 0, 0); //rotate around X-axis
 		//linear translation described by sine and cosine
 		target_pose.position.y = startY + sin(angle) * radius;
-		target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * i * pScale / steps ) * radius;
+		target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 0.7 * pow((float) i / steps, 2) ) * radius;
 		waypoints.push_back(target_pose);
 	}
 	
@@ -170,7 +182,7 @@ int main(int argc, char** argv){
 	while(ros::ok()) {
 		// Pour forward trajectory
 		if(fraction < 0.0) {
-			fraction = arm.computeCartesianPath(waypoints, 0.01, 10, trajectory);
+			fraction = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory);
 			pour_forward.trajectory_ = trajectory;
 			ROS_INFO("Pouring trajectory (%.2f%% acheived)", fraction * 100.0);
 		} 
@@ -181,13 +193,17 @@ int main(int argc, char** argv){
 		// Pour back trajectory
 		if(fraction_back < 0.0) {
 			std::reverse(waypoints.begin(), waypoints.end());
-			fraction_back = arm.computeCartesianPath(waypoints, 0.01, 15, trajectory_back);
+			fraction_back = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory_back);
 			pour_backward.trajectory_ = trajectory_back;
 			ROS_INFO("Back movement trajectory (cartesian path) (%.2f%% acheived)", fraction_back * 100.0);
 		}
 		arm.execute(pour_backward);
 		sleep(3.0);
+		break;
 	}
+
+	arm.setNamedTarget("folded");
+	arm.move();
 
 // TODO 
 // define frame for the bottle opening

@@ -35,3 +35,6 @@ target_link_libraries(con_motion_test ${catkin_LIBRARIES})
 add_executable(pour_bottle_test src/pouring/pour_bottle_test.cpp)
 target_link_libraries(pour_bottle_test ${catkin_LIBRARIES})
 
+add_executable(grab_pour_place src/grab_pour_place.cpp)
+target_link_libraries(grab_pour_place ${catkin_LIBRARIES})
+

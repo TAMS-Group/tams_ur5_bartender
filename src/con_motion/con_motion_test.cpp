@@ -69,7 +69,7 @@ int main(int argc, char** argv){
     ocm.absolute_x_axis_tolerance = 0.05;
     ocm.absolute_y_axis_tolerance = 0.05;
     ocm.absolute_z_axis_tolerance = 2*M_PI;
-	ocm.weight = 1.0;
+    ocm.weight = 1.0;
     moveit_msgs::Constraints test_constraints;
     test_constraints.orientation_constraints.push_back(ocm);
 
