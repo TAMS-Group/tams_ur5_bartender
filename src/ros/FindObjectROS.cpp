@@ -68,8 +68,8 @@ void FindObjectROS::publish(const find_object::DetectionInfo & info)
 
 			// Find center of the object
 			QPointF center = iter->map(QPointF(objectWidth/2, objectHeight/2));
-			QPointF xAxis = iter->map(QPointF(3*objectWidth/4, objectHeight/2));
-			QPointF yAxis = iter->map(QPointF(objectWidth/2, 3*objectHeight/4));
+			QPointF xAxis = iter->map(QPointF(4*objectWidth/6, objectHeight/2));
+			QPointF yAxis = iter->map(QPointF(objectWidth/2, 4*objectHeight/6));
 
 			cv::Vec3f center3D = this->getDepth(depth_,
 					center.x()+0.5f, center.y()+0.5f,
