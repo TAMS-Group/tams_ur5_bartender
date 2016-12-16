@@ -167,8 +167,7 @@ class GrabPourPlace  {
 
 		//Z offset for pose
 		pose.position.z += 0.3;
-		pose.orientation = tf:rcreateQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		rCode
+		pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
 
 		ROS_INFO_STREAM("Moving Bottle to pose: " << pose);
 
