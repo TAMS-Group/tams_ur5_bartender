@@ -29,29 +29,17 @@ int main(int argc, char** argv){
 
    //robot_state::RobotState start_state(*arm.getCurrentState());
 
-   // geometry_msgs::Pose start_pose; 
-   // start_pose.orientation.x = arm.getCurrentPose().pose.orientation.x;
-   // start_pose.orientation.y = arm.getCurrentPose().pose.orientation.y;
-   // start_pose.orientation.z = arm.getCurrentPose().pose.orientation.z;
-   // start_pose.orientation.w = arm.getCurrentPose().pose.orientation.w;
-   // start_pose.position.x = arm.getCurrentPose().pose.position.x;
-   // start_pose.position.y = arm.getCurrentPose().pose.position.y;
-   // start_pose.position.z = arm.getCurrentPose().pose.position.z;
 	ROS_INFO("Reference frame: %s", arm.getPlanningFrame().c_str());
-	ROS_INFO("Reference frame: %s", arm.getEndEffectorLink().c_str());
+	ROS_INFO("End-effector frame: %s", arm.getEndEffectorLink().c_str());
 
     geometry_msgs::Pose target_pose; 
     geometry_msgs::Pose glass_pose;
-   // target_pose.orientation.x = 0.28;
-   // target_pose.orientation.y = -0.7;
-   // target_pose.orientation.z = 1.0;
-    target_pose.orientation.w = arm.getCurrentPose().pose.orientation.w;
-   // target_pose.orientation= tf::createQuaternionMsgFromRollPitchYaw(0,0,M_PI);
+    target_pose.orientation= tf::createQuaternionMsgFromRollPitchYaw(0,0,0);
     target_pose.position.x =-0.10;
     target_pose.position.y =-0.10;
     target_pose.position.z = 0.15;
 
-    glass_pose.orientation.w = arm.getCurrentPose().pose.orientation.w; 
+    glass_pose.orientation= tf::createQuaternionMsgFromRollPitchYaw(0,0,0);
     glass_pose.position.x = 0.10;
     glass_pose.position.y = 0.10;
     glass_pose.position.z = 0.15;
@@ -73,23 +61,21 @@ int main(int argc, char** argv){
     moveit_msgs::Constraints test_constraints;
     test_constraints.orientation_constraints.push_back(ocm);
 
-	while(true) {
-	arm.setPoseTarget(target_pose);
-	arm.move();
-	sleep(3);
+	while(ros::ok()) {
+		ROS_INFO_STREAM("Move to pour_default");
+		arm.clearPathConstraints();
+		arm.setNamedTarget("pour_default");
+		arm.move();
 
-	arm.setPoseTarget(glass_pose);
-    	arm.setPathConstraints(test_constraints);
-	arm.move();
-	sleep(3);
+		ROS_INFO_STREAM("Move to target_pose");
+		arm.setPoseTarget(target_pose);
+		arm.move();
 
-	arm.clearPathConstraints();
-
-
-	arm.setNamedTarget("folded");
-	arm.move();
-	sleep(5.0);
-}
+		ROS_INFO_STREAM("Perform constraint motion to glass_pose");
+		arm.setPoseTarget(glass_pose);
+		arm.setPathConstraints(test_constraints);
+		arm.move();
+	}
 	//if(arm.plan(plan)) {
 	//	sleep(5.0);
 

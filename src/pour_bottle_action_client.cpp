@@ -15,9 +15,11 @@ int main(int argc, char** argv)
 	goal.portion_size = 10.0;
 	
 	client.sendGoal(goal);
-	client.waitForResult(ros::Duration(5.0));
-	if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+	client.waitForResult();
+	if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED && client.getResult()->success)
 		printf("Yay! The Bottle has been poured!");
+    else
+		printf("Noo! Something failed!");
 	printf("Current State: %s\n", client.getState().toString().c_str());
 	return 0;
 }

@@ -159,8 +159,8 @@ class GrabPourPlace  {
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
 		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = 0.1;
-		ocm.absolute_y_axis_tolerance = 0.1;
+		ocm.absolute_x_axis_tolerance = M_PI * 0.1;
+		ocm.absolute_y_axis_tolerance = M_PI * 0.1;
 		ocm.absolute_z_axis_tolerance = 2*M_PI;
 		ocm.weight = 1.0;
 		constraints.orientation_constraints.push_back(ocm);
@@ -175,6 +175,9 @@ class GrabPourPlace  {
 		arm.setPoseReferenceFrame("table_top");
 		arm.setPoseTarget(pose);
 		arm.setPathConstraints(constraints);
+
+		//arm.setPlannerId("PRMstarkConfigDefault");
+		arm.setPlanningTime(90.0);
 
 		//move arm
 		moveit::planning_interface::MoveItErrorCode errorCode = arm.move();
@@ -238,9 +241,20 @@ class GrabPourPlace  {
 	void cleanup() {
 		despawnObject("bottle");
 		despawnObject("glass");
-		arm.setNamedTarget("folded");
+		arm.setNamedTarget("pour_default");
 		arm.move();
 	}
+
+    bool placeBottle(std::string bottle_id, geometry_msgs::Pose bottle_pose) {
+        ROS_INFO("Placing Bottle");
+        std::vector<geometry_msgs::PoseStamped> poses;
+        geometry_msgs::PoseStamped bottle_pose_stamped;
+        bottle_pose_stamped.header.frame_id = "table_top";
+        bottle_pose_stamped.pose = bottle_pose;
+        poses.push_back(bottle_pose_stamped);
+        moveit::planning_interface::MoveItErrorCode errorCode = arm.place(bottle_id, poses);
+        return bool(errorCode);
+    }
 };
 
 typedef actionlib::SimpleActionServer<project16_manipulation::PourBottleAction> Server;
@@ -268,6 +282,8 @@ void execute(const project16_manipulation::PourBottleGoalConstPtr& goal, Server*
 		//move bottle to glass
 		if( success = task_planner.move_bottle(glass_pose)) {
 			feedback.task_state = "Bottle moved to glass";
+//            as->setAborted();
+//            return;
 			as->publishFeedback(feedback);
 			ros::Duration(1.0).sleep();
 			//perform pouring motion
@@ -275,12 +291,16 @@ void execute(const project16_manipulation::PourBottleGoalConstPtr& goal, Server*
 				feedback.task_state = "Pouring succeeded";
 				as->publishFeedback(feedback);
 				//move bottle back to bottle position
-				if (success = task_planner.move_bottle(bottle_pose)) {
+				if (success = task_planner.placeBottle(bottle.id, bottle_pose)) {
 					feedback.task_state = "Bottle moved back";
 					as->publishFeedback(feedback);
 				}
 			}
 		}
+        else {
+            as->setAborted();
+            return;
+        }
 	}
 
 	ros::Duration(3.0).sleep();
