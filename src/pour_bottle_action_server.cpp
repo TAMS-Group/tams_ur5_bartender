@@ -286,9 +286,7 @@ class GrabPourPlace  {
 		return true;
 	}
 
-	bool releaseBottleAndMoveBack(std::string bottle_id) {
-		despawnObject(bottle_id);
-		moveit_msgs::CollisionObject bottle = spawnObject(bottle_id);
+	bool move_back() {
 		arm.setNamedTarget("pour_default");
 		return bool(arm.move());
 	}
@@ -345,8 +343,9 @@ void execute(const project16_manipulation::PourBottleGoalConstPtr& goal, Server*
 				    return;
 				}
 				ros::Duration(1.0).sleep();
-				if (!task_planner.releaseBottleAndMoveBack(bottle.id)) {
-      			            as->setAborted();
+				//move arm to default
+				if (!task_planner.move_back()) {
+			            as->setAborted();
 				    return;
 				}
 			}
