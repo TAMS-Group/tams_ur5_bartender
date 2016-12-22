@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	client.waitForResult();
 	if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED && client.getResult()->success)
 		printf("Yay! The Bottle has been poured!");
-    else
+    	else
 		printf("Noo! Something failed!");
 	printf("Current State: %s\n", client.getState().toString().c_str());
 	return 0;
