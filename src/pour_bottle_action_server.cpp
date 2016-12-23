@@ -5,17 +5,14 @@
 #include <iostream>
 #include <stdio.h>
 
+#include <ros/ros.h>
 #include <moveit/move_group_interface/move_group.h>
-
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
-#include <moveit_msgs/Grasp.h>
-
-#include <manipulation_msgs/GraspPlanning.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 
 #include <cmath>
-#include <ros/ros.h>
 
 const std::string ARM_ID = "arm";
 const std::string GRIPPER_ID = "gripper";
@@ -152,7 +149,45 @@ class GrabPourPlace  {
 		arm.setPathConstraints(constraints);
 	}
 
-	bool move_bottle(geometry_msgs::Pose pose, float zOffset) {
+//	bool move_bottle(geometry_msgs::Pose pose, float zOffset) {
+//		//Create orientation constraint - bottle up
+//		moveit_msgs::Constraints constraints;
+//		moveit_msgs::OrientationConstraint ocm;
+//		ocm.link_name = "s_model_tool0";
+//		ocm.header.frame_id = "table_top";
+//		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+//		ocm.absolute_x_axis_tolerance = M_PI / 9;
+//		ocm.absolute_y_axis_tolerance = M_PI / 9;
+//		ocm.absolute_z_axis_tolerance = 2*M_PI;
+//		ocm.weight = 1.0;
+//		constraints.orientation_constraints.push_back(ocm);
+//
+//		//Z offset for pose
+//		pose.position.z += zOffset;
+//
+//		ROS_INFO_STREAM("Moving Bottle to pose: " << pose);
+//
+//		//set target and constraints
+//		arm.setPoseReferenceFrame("table_top");
+//		arm.setPoseTarget(pose);
+//		arm.setPathConstraints(constraints);
+//
+//		//arm.setPlannerId("PRMstarkConfigDefault");
+//		arm.setPlanningTime(90.0);
+//
+//		//move arm
+//		moveit::planning_interface::MoveItErrorCode errorCode = arm.move();
+//
+//		//remove constraints after movement
+//		arm.clearPathConstraints();
+//		return bool(errorCode); 
+//	}
+
+	bool execute_plan(moveit::planning_interface::MoveGroup::Plan plan) {
+		return bool(arm.execute(plan));
+	}
+
+	moveit::planning_interface::MoveGroup::Plan get_move_bottle_plan(geometry_msgs::Pose pose, float zOffset) {
 		//Create orientation constraint - bottle up
 		moveit_msgs::Constraints constraints;
 		moveit_msgs::OrientationConstraint ocm;
@@ -176,65 +211,82 @@ class GrabPourPlace  {
 		arm.setPathConstraints(constraints);
 
 		//arm.setPlannerId("PRMstarkConfigDefault");
-		arm.setPlanningTime(90.0);
+		arm.setPlanningTime(45.0);
 
 		//move arm
-		moveit::planning_interface::MoveItErrorCode errorCode = arm.move();
-
-		//remove constraints after movement
+		moveit::planning_interface::MoveGroup::Plan plan;
+		arm.plan(plan);
 		arm.clearPathConstraints();
-		return bool(errorCode); 
+		return plan;
 	}
 
-	bool pour_bottle(moveit_msgs::CollisionObject bottle) {
+	bool pour_bottle_in_glass(moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
 		ROS_INFO("Pour Bottle");
 
+		// Plan pouring trajectory (forward)
+		moveit::planning_interface::MoveGroup::Plan pour_forward;
+		moveit_msgs::RobotTrajectory trajectory;
+		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(false, bottle, glass), 0.03, 3, trajectory);
+		ROS_INFO("Pouring trajectory (%.2f%% acheived)", success_percentage * 100.0);
+		if(success_percentage < 1.0) {
+			ROS_INFO("Trying other direction!");
+			success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(true, bottle, glass), 0.03, 3, trajectory);
+			ROS_INFO("Pouring trajectory (%.2f%% acheived)", success_percentage * 100.0);
+		}
+
+		bool success = ( success_percentage > 0.95 );
+		if(success) {
+			pour_forward.trajectory_ = trajectory;
+
+			//reverse pouring trajectory
+			moveit::planning_interface::MoveGroup::Plan pour_backward;
+			robot_trajectory::RobotTrajectory rTrajectory(arm.getRobotModel(),"arm");
+			rTrajectory.setRobotTrajectoryMsg((*arm.getCurrentState()), trajectory);
+			rTrajectory.reverse();
+			rTrajectory.getRobotTrajectoryMsg(pour_backward.trajectory_);
+
+			if(!arm.execute(pour_forward)) {
+				//TODO: handle failure
+				return false;
+			}
+
+			//maybe parameterize pouring time and/or speed
+			sleep(3.0);
+
+			if(!arm.execute(pour_backward)) {
+				//TODO: handle failure
+				return false;
+			}
+		}			
+		return success;
+	}
+
+	std::vector<geometry_msgs::Pose> compute_pouring_waypoints(bool inverse_direction, moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
 		arm.setPoseReferenceFrame("world");
 		geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
 		geometry_msgs::Pose target_pose = start_pose;
-
 		std::vector<geometry_msgs::Pose> waypoints;
 		waypoints.push_back(start_pose); // first point of trajectory - necessary?
 		//pouring is described in a circular motion
+		int dFactor = inverse_direction ? -1 : 1;
 		int steps = 10; //number of waypoints
 		float pScale = 0.6; //max pouring angle in percent (100% is M_PI)
 		float radius = bottle.primitives[0].dimensions[0] / 2; //radius is half the bottle height
+		float glass_radius = glass.primitives[0].dimensions[1] / 2; //glass radius is half the glass height
 		float startZ = start_pose.position.z; 
 		float startY = start_pose.position.y;
 		for(int i = 0; i <= steps; i++) {
 			float angle = pScale * M_PI * i / steps;
+			float tilt_factor = pow((float) i / steps, 2);
 			ROS_INFO_STREAM("computing waypoint for angle " << angle);
-			target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI + angle, 0, 0); //rotate around X-axis
+			target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI + dFactor * angle, 0, 0); //rotate around X-axis
 			//linear translation described by sine and cosine
-			target_pose.position.y = startY + sin(angle) * radius;
-			target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 0.7 * pow((float) i / steps, 2) ) * radius;
+			target_pose.position.y = startY + dFactor * (sin(angle) * radius +  tilt_factor * glass_radius);
+			target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 1.1 * tilt_factor) * radius;
 			waypoints.push_back(target_pose);
 		}
 
-		moveit::planning_interface::MoveGroup::Plan pour_forward;
-		moveit::planning_interface::MoveGroup::Plan pour_backward;
-
-		moveit_msgs::RobotTrajectory trajectory;
-		moveit_msgs::RobotTrajectory trajectory_back;
-
-		// Pour forward trajectory
-		double fraction = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory);
-		pour_forward.trajectory_ = trajectory;
-		ROS_INFO("Pouring trajectory (%.2f%% acheived)", fraction * 100.0);
-		arm.execute(pour_forward);
-
-		sleep(5.0);
-
-		// Pour back trajectory
-		std::reverse(waypoints.begin(), waypoints.end());
-		double fraction_back = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory_back);
-		pour_backward.trajectory_ = trajectory_back;
-		ROS_INFO("Back movement trajectory (cartesian path) (%.2f%% acheived)", fraction_back * 100.0);
-
-		arm.execute(pour_backward);
-		sleep(3.0);
-		//Return if trajectories where successfull
-		return (fraction == 1.0 && fraction_back == 1.0);
+		return waypoints;
 	}
 
 	void cleanup() {
@@ -248,23 +300,27 @@ class GrabPourPlace  {
 		ROS_INFO("Placing Bottle");
 
 		//Setting height to 1 cm above table_top
-
-		bottle_pose.position.z += 0.005;
-  		bottle_pose.position.y += 0.016;
+		geometry_msgs::Pose place_pose = arm.getCurrentPose().pose;
+		place_pose.position.z = bottle_pose.position.z + 0.005;
+  		place_pose.position.y += 0.016;
 
 		//move bottle down
 		std::vector<geometry_msgs::Pose> waypoints;
-		waypoints.push_back(bottle_pose);
+		waypoints.push_back(place_pose);
 		moveit::planning_interface::MoveGroup::Plan plan;
 		moveit_msgs::RobotTrajectory trajectory;
 		double fraction = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory);
 		plan.trajectory_ = trajectory;
-		arm.execute(plan);
+		if(!fraction==1.0 || !bool(arm.execute(plan))) {
+			return false;
+		}
 		ros::Duration(1.0).sleep();
 
 		//open gripper
 		gripper.setNamedTarget("basic_open");
-		gripper.move();
+		if(!gripper.move()) {
+			return false;
+		}
 		ros::Duration(1.0).sleep();
 
 		//release object
@@ -274,21 +330,32 @@ class GrabPourPlace  {
 		ros::Duration(1.0).sleep();
 
 		//move to retreat position
-		geometry_msgs::Pose post_place_pose = bottle_pose;
-		bottle_pose.position.y += 0.1;
+		geometry_msgs::Pose post_place_pose = place_pose;
+		post_place_pose.position.y += 0.1;
+		//post_place_pose.position.z -= 0.1;
 		std::vector<geometry_msgs::Pose> retreat_waypoints;
-		retreat_waypoints.push_back(bottle_pose);
+		retreat_waypoints.push_back(post_place_pose);
 		moveit::planning_interface::MoveGroup::Plan retreat_plan;
 		moveit_msgs::RobotTrajectory retreat_trajectory;
 		double retreat_fraction = arm.computeCartesianPath(retreat_waypoints, 0.03, 3, retreat_trajectory);
 		retreat_plan.trajectory_ = retreat_trajectory;
-		arm.execute(retreat_plan);
-		return true;
+		if(!retreat_fraction == 1.0)
+			return bool(arm.execute(retreat_plan));
+		else
+			return false;
+;
 	}
 
 	bool move_back() {
 		arm.setNamedTarget("pour_default");
 		return bool(arm.move());
+	}
+
+	void reverse_trajectory(moveit_msgs::RobotTrajectory &forward, moveit_msgs::RobotTrajectory &backward){
+		robot_trajectory::RobotTrajectory rTrajectory(arm.getRobotModel(),"arm");
+		rTrajectory.setRobotTrajectoryMsg((*arm.getCurrentState()), forward);
+		rTrajectory.reverse();
+		rTrajectory.getRobotTrajectoryMsg(backward);
 	}
 };
 
@@ -310,60 +377,77 @@ void execute(const project16_manipulation::PourBottleGoalConstPtr& goal, Server*
 	feedback.task_state = "Objects spawned";
 	as->publishFeedback(feedback);
 
-	bool success = true;
 
-	if(success = task_planner.grab_bottle(bottle.id)) {
-		feedback.task_state = "Bottle grasped" + bottle.id;
-		as->publishFeedback(feedback);
-		ros::Duration(1.0).sleep();
-		//move bottle to glass
-		if( success = task_planner.move_bottle(glass_pose, .3)) {
-			feedback.task_state = "Bottle moved to glass";
-//            as->setAborted();
-//            return;
-			as->publishFeedback(feedback);
-			ros::Duration(1.0).sleep();
-			//perform pouring motion
-			if (success = task_planner.pour_bottle(bottle)) {
-				feedback.task_state = "Pouring succeeded";
-				as->publishFeedback(feedback);
-				//move bottle back to bottle position
-				ros::Duration(2.0).sleep();
-				//set grasp orientation for move back and place
-				if (!task_planner.move_bottle(bottle_pose, .3)) {
-			            as->setAborted();
-				    return;
-				}
-				feedback.task_state = "Bottle moved back";
-				as->publishFeedback(feedback);
-				ros::Duration(1.0).sleep();
-				//place bottle down
-				if (!task_planner.placeBottleDown(bottle.id, bottle_pose)) {
-			            as->setAborted();
-				    return;
-				}
-				ros::Duration(1.0).sleep();
-				//move arm to default
-				if (!task_planner.move_back()) {
-			            as->setAborted();
-				    return;
-				}
-			}
-		}
-        else {
-            as->setAborted();
-            return;
-        }
+	//Grab bottle
+	if(!task_planner.grab_bottle(bottle.id))  {
+		as->setAborted();
+		return;
 	}
+	feedback.task_state = "Bottle grasped" + bottle.id;
+	as->publishFeedback(feedback);
+	ros::Duration(1.0).sleep();
+
+
+	//Move bottle to glass
+	moveit::planning_interface::MoveGroup::Plan move_bottle = task_planner.get_move_bottle_plan(glass_pose, .3);
+	moveit::planning_interface::MoveGroup::Plan move_bottle_back;
+	task_planner.reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
+	if(!task_planner.execute_plan(move_bottle)) {
+		as->setAborted();
+		return;
+	}
+	feedback.task_state = "Bottle moved to glass";
+	as->publishFeedback(feedback);
+	ros::Duration(1.0).sleep();
+
+
+	//Perform pouring motion
+	if (!task_planner.pour_bottle_in_glass(bottle, glass)) {
+		as->setAborted();
+		return;
+	}
+	feedback.task_state = "Pouring succeeded";
+	as->publishFeedback(feedback);
+	ros::Duration(1.0).sleep();
+
+
+	//Move bottle back to start position
+	if (!task_planner.execute_plan(move_bottle_back)) {
+		as->setAborted();
+		return;
+	}
+	feedback.task_state = "Bottle moved back to start position";
+	as->publishFeedback(feedback);
+	ros::Duration(1.0).sleep();
+
+
+	//Place bottle down and release
+	if (!task_planner.placeBottleDown(bottle.id, bottle_pose)) {
+		as->setAborted();
+		return;
+	}
+	feedback.task_state = "Bottle placed on table";
+	as->publishFeedback(feedback);
+	ros::Duration(1.0).sleep();
+
+
+	//Move arm to default position
+	if (!task_planner.move_back()) {
+		as->setAborted();
+		return;
+	}
+	feedback.task_state = "Arm moved back to default position";
+	as->publishFeedback(feedback);
 
 	ros::Duration(3.0).sleep();
-	//despawn objects and move arm to home
+
+	//despawn objects and move arm to home (if not already happened)
 	task_planner.cleanup();
-	// Do lots of awesome groundbreaking robot stuff here
+
+	//Send result message
 	project16_manipulation::PourBottleResult result;
-	result.success = success;
+	result.success = true;
 	as->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
-	
 }
 
 int main(int argc, char** argv)

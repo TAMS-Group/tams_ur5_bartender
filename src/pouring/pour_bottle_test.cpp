@@ -12,9 +12,8 @@
 #include <moveit_msgs/ApplyPlanningScene.h>
 #include <moveit_msgs/Grasp.h>
 #include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 
-
-#include <manipulation_msgs/GraspPlanning.h>
 #include <math.h>
 
 class PourBottleTest{
@@ -34,8 +33,8 @@ class PourBottleTest{
 
 		PourBottleTest()
 		{
-			objectDescription glas = {{0, 0.03, 0.12}, {0.1, 0.1, 0.05}};
-			object_map["glas"] = glas;
+			objectDescription glass = {{0, 0.03, 0.12}, {0.1, 0.1, 0.05}};
+			object_map["glass"] = glass;
 			
 			objectDescription bottle = {{0, 0.04, 0.3}, {.01, 0, 0}};// {-0.1, -0.1, 0}};
 			object_map["bottle"] = bottle;
@@ -116,8 +115,8 @@ int main(int argc, char** argv){
 	ROS_INFO("Starting test");
 	PourBottleTest testClass;
 
-	ROS_INFO("Spawning glas and bottle");
-	moveit_msgs::CollisionObject glas = testClass.spawnObject("glas", "table_top");
+	ROS_INFO("Spawning glass and bottle");
+	moveit_msgs::CollisionObject glass = testClass.spawnObject("glass", "table_top");
 
 	std::string endeffectorLink = arm.getEndEffectorLink().c_str();
 
@@ -176,30 +175,28 @@ int main(int argc, char** argv){
 
 	moveit_msgs::RobotTrajectory trajectory;
 	moveit_msgs::RobotTrajectory trajectory_back;
-	double fraction = -1.0;
-	double fraction_back = -1.0;
 
+	// Pour forward trajectory
+	double fraction = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory);
+	pour_forward.trajectory_ = trajectory;
+	ROS_INFO("Pouring trajectory (%.2f%% acheived)", fraction * 100.0);
+
+	//reverse trajectory points
+	robot_trajectory::RobotTrajectory rTrajectory(arm.getRobotModel(),"arm");
+
+	rTrajectory.setRobotTrajectoryMsg((*arm.getCurrentState()), trajectory);
+	rTrajectory.reverse();
+
+	//std::reverse(trajectory.joint_trajectory.points.begin(), trajectory.joint_trajectory.points.end());
+	//std::reverse(trajectory.multi_dof_joint_trajectory.points.begin(), trajectory.multi_dof_joint_trajectory.points.end());
+	//moveit::trajectory_processing::IterativeParabolicTimeParameterization::computeTimeStamps(rTrajectory);
+	rTrajectory.getRobotTrajectoryMsg(pour_backward.trajectory_);
 	while(ros::ok()) {
-		// Pour forward trajectory
-		if(fraction < 0.0) {
-			fraction = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory);
-			pour_forward.trajectory_ = trajectory;
-			ROS_INFO("Pouring trajectory (%.2f%% acheived)", fraction * 100.0);
-		} 
 		arm.execute(pour_forward);
 
 		sleep(5.0);
 
-		// Pour back trajectory
-		if(fraction_back < 0.0) {
-			std::reverse(waypoints.begin(), waypoints.end());
-			fraction_back = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory_back);
-			pour_backward.trajectory_ = trajectory_back;
-			ROS_INFO("Back movement trajectory (cartesian path) (%.2f%% acheived)", fraction_back * 100.0);
-		}
 		arm.execute(pour_backward);
-		sleep(3.0);
-		break;
 	}
 
 	arm.setNamedTarget("folded");
@@ -207,7 +204,7 @@ int main(int argc, char** argv){
 
 // TODO 
 // define frame for the bottle opening
-// place over glas using position and angle 
+// place over glass using position and angle 
 // using waypoints in cartesian paths: http://docs.ros.org/indigo/api/moveit_tutorials/html/doc/pr2_tutorials/planning/src/doc/move_group_interface_tutorial.html
 
 // THINGS TO CONSIDER
