@@ -3,19 +3,19 @@ project(project16_manipulation)
 
 find_package(cmake_modules REQUIRED)
 find_package(Eigen REQUIRED)
-find_package(catkin REQUIRED genmsg 
-	actionlib_msgs 
-	actionlib)
-add_action_files(DIRECTORY action FILES PourBottle.action)
-generate_messages(DEPENDENCIES actionlib_msgs)
-
 find_package(catkin REQUIRED COMPONENTS
+	genmsg 
+	actionlib_msgs 
+	actionlib
 	roscpp
 	rospy
 	std_msgs
 	moveit_ros_planning_interface
 	tf
 )
+
+add_action_files(DIRECTORY action FILES PourBottle.action)
+generate_messages(DEPENDENCIES actionlib_msgs)
 
 catkin_package(
 )
@@ -46,6 +46,10 @@ target_link_libraries(grab_pour_place ${catkin_LIBRARIES})
 
 add_executable(pour_bottle_action_server src/pour_bottle_action_server.cpp)
 target_link_libraries(pour_bottle_action_server ${catkin_LIBRARIES})
+add_dependencies(pour_bottle_action_server ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_dependencies(pour_bottle_action_server ${catkin_EXPORTED_TARGETS})
 
 add_executable(pour_bottle_action_client src/pour_bottle_action_client.cpp)
 target_link_libraries(pour_bottle_action_client ${catkin_LIBRARIES})
+add_dependencies(pour_bottle_action_client ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_dependencies(pour_bottle_action_client ${catkin_EXPORTED_TARGETS})

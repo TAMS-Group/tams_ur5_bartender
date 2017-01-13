@@ -1,10 +1,11 @@
 #define USE_MATH_DEFINES
 #include <project16_manipulation/PourBottleAction.h>
-#include <actionlib/server/simple_action_server.h>
 
 #include <iostream>
 #include <stdio.h>
+#include <cmath>
 
+#include <actionlib/server/simple_action_server.h>
 #include <ros/ros.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit_msgs/CollisionObject.h>
@@ -13,11 +14,14 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <tf/transform_listener.h>
 #include <tf2/exceptions.h>
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <pr2016_msgs/BarCollisionObjectArray.h>
 
-#include <cmath>
 
 const std::string ARM_ID = "arm";
 const std::string GRIPPER_ID = "gripper";
+bool OBJECTS_RECOGNIZED = false;
+const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
 
 const tf::TransformListener* listener = NULL;
 
@@ -36,22 +40,33 @@ class GrabPourPlace  {
 	ros::NodeHandle node_handle;
 	ros::ServiceClient planning_scene_diff_client;
 	ros::ServiceClient grasp_planning_service;
-
+	ros::Subscriber collision_obj_sub;
+	actionlib::SimpleActionServer<project16_manipulation::PourBottleAction>* as_;
 	
 	public:
 	std::map<std::string, ObjectDescription> object_map;
 
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
-		ObjectDescription glass = {{0, 0.03, 0.08}, {0.20, 0.10, 0.0}};
+		//Create dummy objects
+		ObjectDescription glass = {{0, 0.04, 0.12}, {0.20, 0.10, 0.0}};
 		object_map["glass"] = glass;
 
-		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
+		ObjectDescription bottle = {{0, 0.04, 0.35}, {-0.1, -0.1, 0}};
 		object_map["bottle"] = bottle;
 
+		//instantiate ServiceClient
 		planning_scene_diff_client = node_handle.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
 		planning_scene_diff_client.waitForExistence();
 
+		//Register action service
+		as_ = new actionlib::SimpleActionServer<project16_manipulation::PourBottleAction>(node_handle, "pour_bottle", boost::bind(&GrabPourPlace::execute, this, _1), false);
+		as_->start();
+
+		//subscribe collision objects
+		collision_obj_sub = node_handle.subscribe("recognizedObjects", 1000, &GrabPourPlace::onObjectsRecognized, this);
+
+		//configure planner
 		arm.setPlannerId("RRTConnectkConfigDefault");
 		arm.setPlanningTime(20.0);
 	}
@@ -76,10 +91,7 @@ class GrabPourPlace  {
 	}
 
 	moveit_msgs::CollisionObject spawnObject(std::string objectID){
-		moveit_msgs::ApplyPlanningScene srv;
-		moveit_msgs::PlanningScene planning_scene;
-		planning_scene.is_diff = true;
-		planning_scene.robot_state.is_diff = true;
+
 
 		moveit_msgs::CollisionObject object;
 
@@ -105,6 +117,11 @@ class GrabPourPlace  {
 
 		// add object to scene
 		object.operation = object.ADD;
+
+		moveit_msgs::ApplyPlanningScene srv;
+		moveit_msgs::PlanningScene planning_scene;
+		planning_scene.is_diff = true;
+		planning_scene.robot_state.is_diff = true;
 		planning_scene.world.collision_objects.push_back(object); 
 		// remove attached object in case it is attached
 		/*   moveit_msgs::AttachedCollisionObject aco;
@@ -256,7 +273,7 @@ class GrabPourPlace  {
 			}
 
 			//maybe parameterize pouring time and/or speed
-			sleep(3.0);
+			sleep(2.0);
 
 			if(!arm.execute(pour_backward)) {
 				//TODO: handle failure
@@ -275,9 +292,9 @@ class GrabPourPlace  {
 		//pouring is described in a circular motion
 		int dFactor = inverse_direction ? -1 : 1;
 		int steps = 10; //number of waypoints
-		float pScale = 0.6; //max pouring angle in percent (100% is M_PI)
-		float radius = bottle.primitives[0].dimensions[0] / 2; //radius is half the bottle height
-		float glass_radius = glass.primitives[0].dimensions[1] / 2; //glass radius is half the glass height
+		float pScale = 0.7; //max pouring angle in percent (100% is M_PI)
+		float radius = bottle.primitives[0].dimensions[0] / 2; //radius is half the bottle height (motion radius)
+		float glass_radius = glass.primitives[0].dimensions[1] / 2; //glass radius is half the glass width
 		float startZ = start_pose.position.z; 
 		float startY = start_pose.position.y;
 		for(int i = 0; i <= steps; i++) {
@@ -372,125 +389,151 @@ class GrabPourPlace  {
 		robot_trajectory::RobotTrajectory rTrajectory(arm.getRobotModel(),"arm");
 		rTrajectory.setRobotTrajectoryMsg((*arm.getCurrentState()), forward);
 		rTrajectory.reverse();
+		trajectory_processing::IterativeParabolicTimeParameterization iptp;
+		iptp.computeTimeStamps(rTrajectory);
 		rTrajectory.getRobotTrajectoryMsg(backward);
 	}
-};
 
-typedef actionlib::SimpleActionServer<project16_manipulation::PourBottleAction> Server;
+	void onObjectsRecognized(const pr2016_msgs::BarCollisionObjectArray& objArray)
+	{
+		if(!OBJECTS_RECOGNIZED) {
+			OBJECTS_RECOGNIZED = true;
+			ROS_INFO("creating collision objects");
+			moveit_msgs::ApplyPlanningScene srv;
+			moveit_msgs::PlanningScene planning_scene;
+			planning_scene.is_diff = true;
+			planning_scene.robot_state.is_diff = true;
+			for(int i = 0; i<objArray.objects.size(); i++) {
+				// add object to scene
+				moveit_msgs::CollisionObject object = objArray.objects[i];
+				object.operation = object.ADD;
+				ROS_INFO_STREAM("Bottle " << object.type.key);
+				object.id = "bottle" + i;
+				planning_scene.world.collision_objects.push_back(object); 
+			}
+			srv.request.scene = planning_scene;
 
-void execute(const project16_manipulation::PourBottleGoalConstPtr& goal, Server* as)
-{
-	//Define which steps should be run (should be scoped enum)
-	bool run_grab_bottle = true; 
-	bool run_move_to_glass = true; 
-	bool run_pour_bottle = true; 
-	bool run_move_back = true; 
-	bool run_place_bottle = true;
-
-	GrabPourPlace task_planner;
-	task_planner.cleanup();
-	project16_manipulation::PourBottleFeedback feedback;
-
-	//Spawn bottle and glass
-	moveit_msgs::CollisionObject bottle = task_planner.spawnObject("bottle");
-	moveit_msgs::CollisionObject glass = task_planner.spawnObject("glass");
-	geometry_msgs::Pose bottle_pose = bottle.primitive_poses[0];
-	bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, -M_PI / 2);
-	geometry_msgs::Pose glass_pose = glass.primitive_poses[0];
-	glass_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-	feedback.task_state = "Objects spawned";
-	as->publishFeedback(feedback);
-
-
-	//Grab bottle
-	if(run_grab_bottle) {
-		if(!task_planner.grab_bottle(bottle.id))  {
-			as->setAborted();
-			return;
+			bool success = planning_scene_diff_client.call(srv);
+			ROS_INFO(success ? "Yeah, objects where spawned" : "NOOOO");
 		}
-		feedback.task_state = "Bottle grasped" + bottle.id;
-		as->publishFeedback(feedback);
-		ros::Duration(1.0).sleep();
 	}
 
+	void execute(const project16_manipulation::PourBottleGoalConstPtr& goal)
+	{
+		//Define which steps should be run (should be scoped enum)
+		bool run_grab_bottle = true; 
+		bool run_move_to_glass = true; 
+		bool run_pour_bottle = true; 
+		bool run_move_back = true; 
+		bool run_place_bottle = true;
 
-	//Move bottle to glass
-	moveit::planning_interface::MoveGroup::Plan move_bottle_back;
-	if(run_move_to_glass) {
-		moveit::planning_interface::MoveGroup::Plan move_bottle = task_planner.get_move_bottle_plan(glass_pose, .3);
-		task_planner.reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
-		if(!task_planner.execute_plan(move_bottle)) {
-			as->setAborted();
-			return;
+		cleanup();
+		project16_manipulation::PourBottleFeedback feedback;
+		//TODO: take bottle from collision object array
+
+		//Spawn bottle and glass
+		moveit_msgs::CollisionObject bottle = spawnObject("bottle");
+		moveit_msgs::CollisionObject glass = spawnObject("glass");
+		geometry_msgs::Pose bottle_pose = bottle.primitive_poses[0];
+		bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, -M_PI / 2);
+		geometry_msgs::Pose glass_pose = glass.primitive_poses[0];
+		glass_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		feedback.task_state = "Objects spawned";
+		as_->publishFeedback(feedback);
+
+
+		//Grab bottle
+		if(run_grab_bottle) {
+			if(!grab_bottle(bottle.id))  {
+				as_->setAborted();
+				return;
+			}
+			feedback.task_state = "Bottle grasped" + bottle.id;
+			as_->publishFeedback(feedback);
+			ros::Duration(1.0).sleep();
 		}
-		feedback.task_state = "Bottle moved to glass";
-		as->publishFeedback(feedback);
-		ros::Duration(1.0).sleep();
-	}
 
 
-	//Perform pouring motion
-	if(run_pour_bottle) {
-		if (!task_planner.pour_bottle_in_glass(bottle, glass)) {
-			as->setAborted();
-			return;
+		//Move bottle to glass
+		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
+		if(run_move_to_glass) {
+			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .3);
+			reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
+			if(!execute_plan(move_bottle)) {
+				as_->setAborted();
+				return;
+			}
+			feedback.task_state = "Bottle moved to glass";
+			as_->publishFeedback(feedback);
+			ros::Duration(1.0).sleep();
 		}
-		feedback.task_state = "Pouring succeeded";
-		as->publishFeedback(feedback);
-		ros::Duration(1.0).sleep();
-	}
 
 
-	//Move bottle back to start position
-	if (run_move_back) {
-		if (!task_planner.execute_plan(move_bottle_back)) {
-			as->setAborted();
-			return;
+		//Perform pouring motion
+		if(run_pour_bottle) {
+			if (!pour_bottle_in_glass(bottle, glass)) {
+				as_->setAborted();
+				return;
+			}
+			feedback.task_state = "Pouring succeeded";
+			as_->publishFeedback(feedback);
+			ros::Duration(1.0).sleep();
 		}
-		feedback.task_state = "Bottle moved back to start position";
-		as->publishFeedback(feedback);
-		ros::Duration(1.0).sleep();
-	}
 
 
-	//Place bottle down and release
-	if (run_place_bottle) {
-		if (!task_planner.placeBottleDown(bottle.id)) {
-			as->setAborted();
-			return;
+		//Move bottle back to start position
+		if (run_move_back) {
+			if (!execute_plan(move_bottle_back)) {
+				as_->setAborted();
+				return;
+			}
+			feedback.task_state = "Bottle moved back to start position";
+			as_->publishFeedback(feedback);
+			ros::Duration(1.0).sleep();
 		}
-		feedback.task_state = "Bottle placed on table";
-		as->publishFeedback(feedback);
-		//ros::Duration(1.0).sleep();
-	}
 
 
-	//Move arm to default position
-	if (!task_planner.move_back()) {
-		as->setAborted();
+		//Place bottle down and release
+		if (run_place_bottle) {
+			if (!placeBottleDown(bottle.id)) {
+				as_->setAborted();
+				return;
+			}
+			feedback.task_state = "Bottle placed on table";
+			as_->publishFeedback(feedback);
+			//ros::Duration(1.0).sleep();
+		}
+		/*
+
+
+		//Move arm to default position
+		if (!move_back()) {
+		as_->setAborted();
 		return;
+		}
+		feedback.task_state = "Arm moved back to default position";
+		as_->publishFeedback(feedback);
+
+		ros::Duration(3.0).sleep();
+
+		//despawn objects and move arm to home (if not already happened)
+		cleanup();
+		*/
+
+		//Send result message
+		project16_manipulation::PourBottleResult result;
+		result.success = true;
+		as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
 	}
-	feedback.task_state = "Arm moved back to default position";
-	as->publishFeedback(feedback);
-
-	ros::Duration(3.0).sleep();
-
-	//despawn objects and move arm to home (if not already happened)
-	task_planner.cleanup();
-
-	//Send result message
-	project16_manipulation::PourBottleResult result;
-	result.success = true;
-	as->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
-}
+};
 
 int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "pour_bottle_server");
 	listener = new (tf::TransformListener);
-	ros::NodeHandle n;
-	Server server(n, "pour_bottle", boost::bind(&execute, _1, &server), false);
-	server.start();
+	GrabPourPlace gpp;
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
 	ros::spin();
 	return 0;
 }
