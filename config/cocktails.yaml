@@ -3,11 +3,12 @@ cocktails:
 - cocktail:
     name: 'cuba libre'
     ingredients:
-        - white rum:
-            amount: 5
-        - cola:
-            amount: 12
-cocktails:
+        - incr:
+            type: 'white rum'
+            amount: 5.0
+        - incr:
+            type: 'cola'
+            amount: 12.0
 - cocktail:
     name: 'tams libre'
     ingredients:
@@ -19,4 +20,4 @@ cocktails:
             amount: 2.5
         - incr:
             type: cola
-            amount: 12
+            amount: 12.0

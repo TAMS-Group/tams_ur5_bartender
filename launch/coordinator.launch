@@ -1,0 +1,7 @@
+<launch>
+    <!--Starting tams_pr16_bar_objects-->
+    <node pkg="project16_coordinator" type="tams_pr16_drink_chooser" name="tams_pr16_drink_chooser" output="screen">
+        <rosparam command="load" file="$(find project16_coordinator)/config/cocktails.yaml" />
+    </node>
+    
+</launch>

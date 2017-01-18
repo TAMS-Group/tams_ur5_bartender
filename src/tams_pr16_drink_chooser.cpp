@@ -45,18 +45,15 @@ public:
         sub_ = nh.subscribe("recognizedObjects", 10, &DrinkChooser::objectsCallback, this);
         
         pnh.getParam("cocktails", cocktails);
-        
         try {
             for(int32_t i = 0; i < cocktails.size(); ++i) {
                 XmlRpc::XmlRpcValue& c = cocktails[i].begin()->second;
                 std::map <std::string, double> incr;
-                for(int32_t j = 0; j < c["ingredients"].begin()->second.size(); ++j) {
-                    XmlRpc::XmlRpcValue& in = c["ingredients"].begin()->second[i].begin()->second;
-                    incr[in["type"]] = double(in["amount"]);
-                    //ROS_WARN_STREAM(<< in["type"]);
-                    ROS_WARN("%f", double(in["amount"]));
-                }
                 
+                for(int32_t j = 0; j < c["ingredients"].size(); ++j) {
+                    std::string name = c["ingredients"][i]["incr"]["type"];
+                    incr[name] = double(c["ingredients"][i]["incr"]["amount"]);
+                }
                 Cocktail c1(i,c["name"],incr);
                 cocktails_db.push_back(c1);
             }
