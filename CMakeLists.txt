@@ -70,7 +70,7 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 add_action_files(
   DIRECTORY action
-  FILES cocktail.action
+  FILES Cocktail.action
 )
 
 ## Generate added messages and services with any dependencies listed here

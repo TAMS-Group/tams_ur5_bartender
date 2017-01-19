@@ -8,21 +8,37 @@
 #include <visualization_msgs/Marker.h>
 #include <XmlRpcValue.h>
 #include <XmlRpcException.h>
+#include <actionlib/server/simple_action_server.h>
+#include <actionlib/client/simple_action_client.h>
+#include <project16_coordinator/cocktailAction.h>
+#include <project16_manipulation/PourBottleAction.h>
+
 
 //TO-DO hardcoded array of need IDS - find in recognized objects and print results for testing!
 
-class Cocktail{
+class Cocktail {
 public:
-    Cocktail(){}
-    Cocktail(int id, std::string name, std::map<std::string, double>  ingredients):
+
+    Cocktail() {
+    }
+
+    Cocktail(int id, std::string name, std::map<std::string, double> ingredients) :
     id_(id),
     name_(name),
-    ingredients_(ingredients)
-    {}
-    
-    int getId() const {return id_;}
-    std::string getName() const {return name_;}
-    std::map<std::string, double>  getIngredients() const {return ingredients_;}
+    ingredients_(ingredients) {
+    }
+
+    int getId() const {
+        return id_;
+    }
+
+    std::string getName() const {
+        return name_;
+    }
+
+    std::map<std::string, double> getIngredients() const {
+        return ingredients_;
+    }
 
 private:
     int id_;
@@ -34,60 +50,94 @@ private:
 class DrinkChooser {
 public:
 
-    DrinkChooser() : mapFrameId_("/table_top"), objFramePrefix_("object") {
+    DrinkChooser() {
         ros::NodeHandle pnh("~");
-        pnh.param("map_frame_id", mapFrameId_, mapFrameId_);
-        pnh.param("object_prefix", objFramePrefix_, objFramePrefix_);
 
         ros::NodeHandle nh;
-        //        marker_pub_ = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1000);
 
         sub_ = nh.subscribe("recognizedObjects", 10, &DrinkChooser::objectsCallback, this);
-        
+
         pnh.getParam("cocktails", cocktails);
+
+        //Register action service
+        as_ = new actionlib::SimpleActionServer<project16_coordinator::CocktailAction>(nh, "cocktail_mixer", boost::bind(&DrinkChooser::mix, this, _1), false);
+
+        as_->start();
+
+
         try {
-            for(int32_t i = 0; i < cocktails.size(); ++i) {
+            for (int32_t i = 0; i < cocktails.size(); ++i) {
                 XmlRpc::XmlRpcValue& c = cocktails[i].begin()->second;
                 std::map <std::string, double> incr;
-                
-                for(int32_t j = 0; j < c["ingredients"].size(); ++j) {
+
+                for (int32_t j = 0; j < c["ingredients"].size(); ++j) {
                     std::string name = c["ingredients"][i]["incr"]["type"];
                     incr[name] = double(c["ingredients"][i]["incr"]["amount"]);
                 }
-                Cocktail c1(i,c["name"],incr);
+                Cocktail c1(i, c["name"], incr);
                 cocktails_db.push_back(c1);
             }
-        }
-        catch(XmlRpc::XmlRpcException & e){
+        } catch (XmlRpc::XmlRpcException & e) {
             ROS_WARN("%s", e.getMessage().c_str());
         }
     }
 
     void objectsCallback(const pr2016_msgs::BarCollisionObjectArrayConstPtr & msg) {
-        unsigned int balance[] = {10, 2, 3, 7, 5};
+        bottles.clear();
         if (msg->objects.size()) {
-            for (int z = 0; z < 10; z++) {
-                for (unsigned int i = 0; i < msg->objects.size(); i += 1) {
-                    for (unsigned int j = 0; j < msg->objects[i].primitives.size(); j += 1) {
-                        ROS_INFO("%s","Test");
-//                        if (n[ z ] ==) {
-//                            marker.header.frame_id = mapFrameId_;
-//                            marker.id = j + i * 10;
-//                            marker_pub_.publish(marker);
-//                            n[ i ] = i + 100;
-//                        }
-                    }
-                }
+            for (unsigned int i = 0; i < msg->objects.size(); i += 1) {
+                moveit_msgs::CollisionObject obj = msg->objects[i];
+                std::stringstream ss;
+                ss << obj.type.key;
+                std::string key = ss.str();
+                bottles.push_back(key);
             }
         }
     }
+
+    void execute(const project16_coordinator::CocktailConstPtr& goal) {
+        Cocktail ordered_cocktail;
+        bool success = false;
+
+        for (int i = 0; i < cocktails_db.size(); i++) {
+            if (cocktails_db[i].getName() == goal->cocktail) {
+                ordered_cocktail = cocktails_db[i];
+            }
+        }
+
+        if (ordered_cocktail == NULL) {
+            as_->setAborted();
+            return;
+        }
+        feedback.task_state = "Start mixing " + ordered_cocktail.getName();
+        as_->publishFeedback(feedback);
+
+        std::map<std::string, double> incr = ordered_cocktail.getIngredients();
+        for (int i = 0; i < incr.size(); i++) {
+            
+
+        }
+
+        if (success) {
+            feedback.task_state = "Finished mixing " + ordered_cocktail.getName();
+            as_->publishFeedback(feedback);
+            result_.success = true;
+            as_.setSucceeded(result_);
+        }
+    }
+}
+
+
 private:
-    std::string mapFrameId_;
-    std::string objFramePrefix_;
-    ros::Subscriber sub_;
-    XmlRpc::XmlRpcValue cocktails;
-    std::vector <Cocktail> cocktails_db;
-    //    ros::Publisher marker_pub_;
+std::string mapFrameId_;
+std::string objFramePrefix_;
+ros::Subscriber sub_;
+XmlRpc::XmlRpcValue cocktails;
+std::vector <Cocktail> cocktails_db;
+std::vector <std::string> bottles;
+project16_coordinator::CocktailFeedback feedback_;
+project16_coordinator::CocktailResult result_;
+
 };
 
 int main(int argc, char **argv) {
@@ -95,6 +145,6 @@ int main(int argc, char **argv) {
 
     DrinkChooser sync;
 
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(1);
     ros::spin();
 }
