@@ -27,6 +27,7 @@ const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
 
 std::vector<moveit_msgs::CollisionObject> bottles_;
 
+const int NUM_RETRIES_AFTER_JAM = 5;
 const tf::TransformListener* listener = NULL;
 
 
@@ -50,7 +51,7 @@ class GrabPourPlace  {
 	
 	public:
 	std::map<std::string, ObjectDescription> object_map;
-
+	
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
 		//Create dummy objects
@@ -253,11 +254,11 @@ class GrabPourPlace  {
 		moveit::planning_interface::MoveGroup::Plan pour_forward;
 		moveit_msgs::RobotTrajectory trajectory;
 		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(false, bottle, glass), 0.03, 3, trajectory);
-		ROS_INFO("Pouring trajectory (%.2f%% acheived)", success_percentage * 100.0);
+		ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
 		if(success_percentage < 1.0) {
 			ROS_INFO("Trying other direction!");
 			success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(true, bottle, glass), 0.03, 3, trajectory);
-			ROS_INFO("Pouring trajectory (%.2f%% acheived)", success_percentage * 100.0);
+			ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
 		}
 
 		bool success = ( success_percentage > 0.95 );
@@ -493,34 +494,48 @@ class GrabPourPlace  {
 		feedback.task_state = "Objects spawned";
 		as_->publishFeedback(feedback);
 
-		//Grab bottle
+		int CurrentAttempt;
+
+		//Step 1: Grab bottle
 		if(run_grab_bottle) {
-			if(!grab_bottle(bottle.id))  {
-				as_->setAborted();
-				return;
+			CurrentAttempt = 0;
+			while(!grab_bottle(bottle.id)){
+				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM){
+					feedback.task_state = "Grabbing bottle failed -> skiping stuff";
+					as_->publishFeedback(feedback);
+					as_->setAborted();
+					run_move_to_glass = false;
+					run_pour_bottle = false;
+					run_move_back = false;
+				}
 			}
-			feedback.task_state = "Bottle grasped" + bottle.id;
+			feedback.task_state = std::string("Bottle grasped " + bottle.id) + std::string(" in attempt(s): " + CurrentAttempt);
 			as_->publishFeedback(feedback);
 			ros::Duration(1.0).sleep();
 		}
 
-
-		//Move bottle to glass
+		//Step 2: Move bottle to glass
 		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
 		if(run_move_to_glass) {
-			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .35);
-			reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
-			if(!execute_plan(move_bottle)) {
-				as_->setAborted();
-				return;
+			CurrentAttempt = 1;
+			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .245);
+			while(!execute_plan(move_bottle)){
+				move_bottle = get_move_bottle_plan(glass_pose, .245);
+				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+					feedback.task_state = "Moving bottle to glass failed -> skiping pouring part";
+					as_->publishFeedback(feedback);
+					as_->setAborted();
+					run_pour_bottle = false;
+				}
 			}
-			feedback.task_state = "Bottle moved to glass";
+			reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
+			feedback.task_state = std::string("Bottle moved to glass in " + CurrentAttempt) + " attempt(s)";
 			as_->publishFeedback(feedback);
 			ros::Duration(1.0).sleep();
 		}
 
 
-		//Perform pouring motion
+		//Step 3: Perform pouring motion
 		if(run_pour_bottle) {
 			if (!pour_bottle_in_glass(bottle, glass)) {
 				as_->setAborted();
@@ -532,25 +547,31 @@ class GrabPourPlace  {
 		}
 
 
-		//Move bottle back to start position
+		//Step 4: Move bottle back to start position
 		if (run_move_back) {
-			if (!execute_plan(move_bottle_back)) {
-				as_->setAborted();
-				return;
+			CurrentAttempt = 0;
+			while(!execute_plan(move_bottle_back)){
+				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+					as_->setAborted();
+					return;
+				}
 			}
-			feedback.task_state = "Bottle moved back to start position";
+			feedback.task_state = std::string("Bottle moved back to start position in " + CurrentAttempt) + " attempt(s)";
 			as_->publishFeedback(feedback);
 			ros::Duration(1.0).sleep();
 		}
 
 
-		//Place bottle down and release
+		//Step 5: Place bottle down and release
 		if (run_place_bottle) {
-			if (!placeBottleDown(bottle.id)) {
-				as_->setAborted();
-				return;
+			CurrentAttempt = 0;
+			while(!placeBottleDown(bottle.id)){
+				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+					as_->setAborted();
+					return;
+				}
 			}
-			feedback.task_state = "Bottle placed on table";
+			feedback.task_state = std::string("Bottle placed on table in " + CurrentAttempt) + " attempt(s)";
 			as_->publishFeedback(feedback);
 		}
 
