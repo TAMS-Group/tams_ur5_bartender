@@ -346,7 +346,8 @@ class GrabPourPlace  {
 
 		arm.setPoseReferenceFrame("table_top");
 		geometry_msgs::Pose place_pose = place_pose_stamped.pose;
-		place_pose.position.z = .005 + 0.15; // table distance and bottle height offset
+		;
+		place_pose.position.z = get_bottle_height(bottle_id) / 2 + 0.005; // table distance and bottle height offset
 		ROS_INFO_STREAM(place_pose);
 
 		//move bottle down
@@ -393,6 +394,24 @@ class GrabPourPlace  {
 		else
 			return false;
 ;
+	}
+
+	float get_bottle_height(std::string bottle_id) {
+		moveit_msgs::CollisionObject bottle = NULL;
+		float height = 0.0;
+		for(int i = 0; i< bottles_.size(); i++) {
+			if(bottles_[i].id == bottle_id) {
+				ROS_INFO_STREAM("Bottle found: " << bottles_[i].id);
+				bottle = bottles_[i];
+				break;
+			}
+		}
+		if(bottle != NULL) {
+			for(int i = 0; i < bottle.primitives.size(); i++) {
+				height += bottle.primitives[i].dimensions[0];
+			}
+		}
+		return height;
 	}
 
 	bool move_back() {
@@ -491,7 +510,7 @@ class GrabPourPlace  {
 		//Move bottle to glass
 		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
 		if(run_move_to_glass) {
-			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .3);
+			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .245);
 			reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
 			if(!execute_plan(move_bottle)) {
 				as_->setAborted();
@@ -536,8 +555,6 @@ class GrabPourPlace  {
 			feedback.task_state = "Bottle placed on table";
 			as_->publishFeedback(feedback);
 		}
-		/*
-
 
 		//Move arm to default position
 		if (!move_back()) {
@@ -551,7 +568,6 @@ class GrabPourPlace  {
 
 		//despawn objects and move arm to home (if not already happened)
 		cleanup();
-		*/
 
 		//Send result message
 		project16_manipulation::PourBottleResult result;
