@@ -397,7 +397,7 @@ class GrabPourPlace  {
 	}
 
 	float get_bottle_height(std::string bottle_id) {
-		moveit_msgs::CollisionObject bottle = NULL;
+		moveit_msgs::CollisionObject bottle;
 		float height = 0.0;
 		for(int i = 0; i< bottles_.size(); i++) {
 			if(bottles_[i].id == bottle_id) {
@@ -406,10 +406,8 @@ class GrabPourPlace  {
 				break;
 			}
 		}
-		if(bottle != NULL) {
-			for(int i = 0; i < bottle.primitives.size(); i++) {
-				height += bottle.primitives[i].dimensions[0];
-			}
+		for(int i = 0; i < bottle.primitives.size(); i++) {
+			height += bottle.primitives[i].dimensions[0];
 		}
 		return height;
 	}
