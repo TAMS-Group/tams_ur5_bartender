@@ -220,8 +220,8 @@ class GrabPourPlace  {
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
 		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = M_PI / 9;
-		ocm.absolute_y_axis_tolerance = M_PI / 9;
+		ocm.absolute_x_axis_tolerance = M_PI / 8;
+		ocm.absolute_y_axis_tolerance = M_PI / 8;
 		ocm.absolute_z_axis_tolerance = 2*M_PI;
 		ocm.weight = 1.0;
 		constraints.orientation_constraints.push_back(ocm);
@@ -237,7 +237,7 @@ class GrabPourPlace  {
 		arm.setPathConstraints(constraints);
 
 		//arm.setPlannerId("PRMstarkConfigDefault");
-		arm.setPlanningTime(45.0);
+		arm.setPlanningTime(90.0);
 
 		//move arm
 		moveit::planning_interface::MoveGroup::Plan plan;
@@ -297,7 +297,7 @@ class GrabPourPlace  {
 		int dFactor = inverse_direction ? -1 : 1;
 		int steps = 10; //number of waypoints
 		float pScale = 0.7; //max pouring angle in percent (100% is M_PI)
-		float radius = bottle.primitives[0].dimensions[0] / 2; //radius is half the bottle height (motion radius)
+		float radius =  get_bottle_height(bottle.id) - bottle.primitives[0].dimensions[0] / 2 ;
 		float glass_radius = glass.primitives[0].dimensions[1] / 2; //glass radius is half the glass width
 		float startZ = start_pose.position.z; 
 		float startY = start_pose.position.y;
@@ -508,7 +508,7 @@ class GrabPourPlace  {
 		//Move bottle to glass
 		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
 		if(run_move_to_glass) {
-			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .245);
+			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .35);
 			reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
 			if(!execute_plan(move_bottle)) {
 				as_->setAborted();
