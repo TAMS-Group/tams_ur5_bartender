@@ -8,6 +8,7 @@
 #include <actionlib/server/simple_action_server.h>
 #include <ros/ros.h>
 #include <moveit/move_group_interface/move_group.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
@@ -20,8 +21,11 @@
 
 const std::string ARM_ID = "arm";
 const std::string GRIPPER_ID = "gripper";
-bool OBJECTS_RECOGNIZED = false;
+bool USE_BOTTLE_PUBLISHER = true;
+bool OBJECTS_RECOGNIZED = true;
 const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
+
+std::vector<moveit_msgs::CollisionObject> bottles_;
 
 const tf::TransformListener* listener = NULL;
 
@@ -42,6 +46,7 @@ class GrabPourPlace  {
 	ros::ServiceClient grasp_planning_service;
 	ros::Subscriber collision_obj_sub;
 	actionlib::SimpleActionServer<project16_manipulation::PourBottleAction>* as_;
+	moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 	
 	public:
 	std::map<std::string, ObjectDescription> object_map;
@@ -52,7 +57,7 @@ class GrabPourPlace  {
 		ObjectDescription glass = {{0, 0.04, 0.12}, {0.20, 0.10, 0.0}};
 		object_map["glass"] = glass;
 
-		ObjectDescription bottle = {{0, 0.04, 0.35}, {-0.1, -0.1, 0}};
+		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
 		object_map["bottle"] = bottle;
 
 		//instantiate ServiceClient
@@ -91,7 +96,6 @@ class GrabPourPlace  {
 	}
 
 	moveit_msgs::CollisionObject spawnObject(std::string objectID){
-
 
 		moveit_msgs::CollisionObject object;
 
@@ -312,8 +316,19 @@ class GrabPourPlace  {
 	}
 
 	void cleanup() {
+		ROS_INFO("Cleanup");
+		moveit_msgs::PlanningScene planning_scene;
+		for(int i = 0; i< bottles_.size(); i++) {
+			despawnObject(bottles_[i].id);
+		}
+		bottles_.clear(); 
 		despawnObject("bottle");
+		despawnObject("bacardi");
+		despawnObject("tequila");
 		despawnObject("glass");
+		gripper.setNamedTarget("basic_open");
+		gripper.move();
+		ros::Duration(1.0).sleep();
 		arm.setNamedTarget("pour_default");
 		arm.move();
 	}
@@ -398,28 +413,33 @@ class GrabPourPlace  {
 	{
 		if(!OBJECTS_RECOGNIZED) {
 			OBJECTS_RECOGNIZED = true;
+			bottles_.clear();
 			ROS_INFO("creating collision objects");
-			moveit_msgs::ApplyPlanningScene srv;
-			moveit_msgs::PlanningScene planning_scene;
-			planning_scene.is_diff = true;
-			planning_scene.robot_state.is_diff = true;
 			for(int i = 0; i<objArray.objects.size(); i++) {
 				// add object to scene
 				moveit_msgs::CollisionObject object = objArray.objects[i];
 				object.operation = object.ADD;
 				ROS_INFO_STREAM("Bottle " << object.type.key);
-				object.id = "bottle" + i;
-				planning_scene.world.collision_objects.push_back(object); 
+				object.id = object.type.key;
+				planning_scene_interface_.applyCollisionObject(object); 
+				bottles_.push_back(object);
 			}
-			srv.request.scene = planning_scene;
+		}
+	}
 
-			bool success = planning_scene_diff_client.call(srv);
-			ROS_INFO(success ? "Yeah, objects where spawned" : "NOOOO");
+	void recognizeBottles() 
+	{
+		OBJECTS_RECOGNIZED = false;
+		int retrys = 20;
+		while(!OBJECTS_RECOGNIZED && retrys > 0) {
+			ros::Duration(1.0).sleep();
+			retrys--;
 		}
 	}
 
 	void execute(const project16_manipulation::PourBottleGoalConstPtr& goal)
 	{
+		ROS_INFO("Running pour bottle!");
 		//Define which steps should be run (should be scoped enum)
 		bool run_grab_bottle = true; 
 		bool run_move_to_glass = true; 
@@ -428,19 +448,33 @@ class GrabPourPlace  {
 		bool run_place_bottle = true;
 
 		cleanup();
-		project16_manipulation::PourBottleFeedback feedback;
-		//TODO: take bottle from collision object array
 
-		//Spawn bottle and glass
-		moveit_msgs::CollisionObject bottle = spawnObject("bottle");
-		moveit_msgs::CollisionObject glass = spawnObject("glass");
+		std::string bottle_id = goal->bottle_id;
+		moveit_msgs::CollisionObject bottle;
+
+		if(USE_BOTTLE_PUBLISHER) {
+			recognizeBottles();
+			ros::Duration(2.0).sleep();
+			for(int i = 0; i< bottles_.size(); i++) {
+				if(bottles_[i].id == bottle_id) {
+					ROS_INFO_STREAM("Bottle found: " << bottles_[i].id);
+					bottle = bottles_[i];
+					break;
+				}
+			}
+		} else {
+			//Spawn bottle
+			bottle = spawnObject("bottle");
+		}
+		ROS_INFO_STREAM("Bottles Recognized");
 		geometry_msgs::Pose bottle_pose = bottle.primitive_poses[0];
 		bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, -M_PI / 2);
+		moveit_msgs::CollisionObject glass = spawnObject("glass");
 		geometry_msgs::Pose glass_pose = glass.primitive_poses[0];
 		glass_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		project16_manipulation::PourBottleFeedback feedback;
 		feedback.task_state = "Objects spawned";
 		as_->publishFeedback(feedback);
-
 
 		//Grab bottle
 		if(run_grab_bottle) {
@@ -501,7 +535,6 @@ class GrabPourPlace  {
 			}
 			feedback.task_state = "Bottle placed on table";
 			as_->publishFeedback(feedback);
-			//ros::Duration(1.0).sleep();
 		}
 		/*
 
