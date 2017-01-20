@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   tf
   visualization_msgs
+  project16_manipulation
 )
 
 ## System dependencies are found with CMake's conventions

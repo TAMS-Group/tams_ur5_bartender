@@ -1,0 +1,339 @@
+alexander
+    3.0 cl cognac
+    3.0 cl creme de cacao (brown)
+    3.0 cl fresh cream
+americano
+    3.0 cl campari
+    3.0 cl red vermouth
+    2.0 cl soda water
+angel face
+    3.0 cl calvados
+    3.0 cl gin
+    3.0 cl apricot brandy
+aviation
+    4.5 cl gin
+    1.5 cl maraschino
+    1.5 cl lemon juice
+bacardi
+    4.5 cl bacardi
+    2.0 cl lime juice
+    1.0 cl grenadine
+between the sheets
+    3.0 cl cognac
+    3.0 cl bacardi
+    3.0 cl triple sec
+    2.0 cl lemon juice
+casino
+    4.0 cl gin
+    1.0 cl maraschino
+    1.0 cl orange bitters
+    1.0 cl lemon juice
+clover club
+    4.5 cl gin
+    1.5 cl raspberry syrup
+    1.5 cl lemon juice
+    1.0 cl egg white
+daiquiri
+    4.5 cl bacardi
+    1.5 cl simple syrup
+    2.5 cl lime juice
+derby
+    6.0 cl gin
+    0.1 cl peach bitters
+dry martini
+    6.0 cl gin
+    1.0 cl dry vermouth
+gin fizz
+    4.5 cl gin
+    1.0 cl sugar syrup
+    3.0 cl lemon juice
+    8.0 cl soda water
+john collins
+    4.5 cl gin
+    1.5 cl sugar syrup
+    3.0 cl lemon juice
+    6.0 cl soda water
+manhattan
+    5.0 cl whiskey
+    2.0 cl red vermouth
+    0.1 cl angostura bitters
+mary pickford
+    6.0 cl bacardi
+    1.0 cl maraschino
+    1.0 cl grenadine syrup
+    6.0 cl pineapple juice
+monkey gland
+    5.0 cl gin
+    3.0 cl orange juice
+    0.2 cl absinth
+    0.2 cl grenadine
+negroni
+    3.0 cl gin
+    3.0 cl campari
+    3.0 cl sweet red vermouth
+old fashioned
+    4.5 cl bourbon
+    0.2 cl angostura bitters
+    4.0 cl plain water
+paradise
+    3.5 cl gin
+    2.0 cl apricot brandy
+    1.5 cl orange juice
+planters punch
+    4.5 cl dark rum
+    3.5 cl orange juice
+    3.5 cl pineapple juice
+    2.0 cl lemon juice
+    1.0 cl grenadine
+    1.0 cl sugar syrup
+    0.3 cl angostura bitters
+porto flip
+    1.5 cl brandy
+    4.5 cl red port
+    1.0 cl egg yolk
+ramos gin fizz
+    4.5 cl gin
+    3.0 cl sugar syrup
+    1.5 cl lime juice
+    1.5 cl lemon juice
+    6.0 cl cream
+    0.3 orange flower water
+    0.2 vanilla extract
+    4.0 cl soda water
+rusty nail
+    4.5 cl scotch whisky
+    2.5 cl drambuie
+sazerac
+    5.0 cl cognac
+    1.0 cl absinthe
+    0.2 cl peychauds bitters
+screwdriver
+    5.0 cl vodka
+    10.0 cl orange juice
+sidecar
+    5.0 cl cognac
+    2.0 cl triple sec
+    2.0 cl lemon juice
+stinger
+    5.0 cl cognac
+    2.0 cl creme de menthe (white)
+tuxedo
+    3.0 cl gin
+    3.0 cl dry vermouth
+    0.2 cl maraschino
+    0.1 cl absinthe
+    0.3 cl orange bitters
+whiskey sour
+    4.5 cl bourbon
+    1.5 cl sugar syrup
+    3.0 cl lemon juice
+white lady
+    4.0 cl gin
+    3.0 cl triple sec
+    2.0 cl lemon juice
+bellini
+    10.0 cl prosecco
+    5.0 cl peach puree
+black russian
+    5.0 cl vodka
+    2.0 cl coffee liqueur
+bloody mary
+    4.5 cl vodka
+    9.0 cl tomato juice
+    1.5 cl lemon juice
+    0.3 cl worcestershire sauce
+    0.1 cl tabasco
+caipirinha
+    5.0 cl cachaca
+champagne cocktail
+    9.0 cl champagne
+    1.0 cl cognac
+    0.2 cl angostura bitters
+cosmopolitan
+    4.0 cl citron vodka
+    1.5 cl triple sec
+    3.0 cl cranberry juice
+    1.5 cl lime juice
+cuba libre
+    5.0 cl bacardi
+    12.0 cl cola
+    1.0 cl lime juice
+french 75
+    3.0 cl gin
+    1.5 cl lemon juice
+    0.2 cl sugar syrup
+    6.0 cl champagne
+french connection
+    3.5 cl cognac
+    3.5 cl amaretto
+god father
+    3.5 cl scotch
+    3.5 cl amaretto
+god mother
+    3.5 cl vodka
+    3.5 cl amaretto
+golden dream
+    2.0 cl galliano
+    2.0 cl triple sec
+    2.0 cl orange juice
+    1.0 cl fresh cream
+grasshopper
+    3.0 cl creme de cacao
+    3.0 cl creme de menthe
+    3.0 cl fresh cream
+harvey wallbanger
+    4.5 cl vodka
+    1.5 cl galliano
+    9.0 cl orange juice
+hemingway special
+    6.0 cl bacardi
+    1.5 cl maraschino
+    4.0 cl grapefruit juice
+    1.5 cl lime juice
+horses neck
+    4.0 cl brandy
+    12.0 cl ginger ale
+    0.2 cl angostura bitters
+irish coffee
+    4.0 cl whiskey
+    9.0 cl hot coffee
+    3.0 cl fresh cream
+kir
+    9.0 cl dry white wine
+    1.0 cl creme de cassis
+long island ice tea
+    1.5 cl gin
+    1.5 cl tequila
+    1.5 cl vodka
+    1.5 cl bacardi
+    1.5 cl triple sec
+    3.0 cl simple syrup
+    2.5 cl lemon juice
+    6.0 cl cola
+mai-tai
+    4.0 cl bacardi
+    2.0 cl dark rum
+    1.5 cl triple sec
+    1.5 cl orgeat syrup
+    1.0 cl lime juice
+margarita
+    3.5 cl tequila
+    2.0 cl triple sec
+    1.5 cl lime juice
+mimosa
+    7.5 cl champagne
+    7.5 cl orange juice
+mint julep
+    6.0 cl bourbon
+    1.0 cl water
+mojito
+    4.0 cl bacardi
+    3.0 cl lime juice
+    6.0 cl soda water
+moscow mule
+    4.5 cl vodka
+    12.0 cl ginger beer
+    0.5 cl lime juice
+pina colada
+    3.0 cl bacardi
+    9.0 cl pineapple juice
+    3.0 cl coconut cream
+rose
+    2.0 cl kirsch
+    4.0 cl dry vermouth
+    3.0 cl strawberry syrup
+sea breeze
+    4.0 cl vodka
+    12.0 cl cranberry juice
+    3.0 cl grapefruit juice
+sex on the beach
+    4.0 cl vodka
+    2.0 cl peach schnapps
+    4.0 cl cranberry juice
+    4.0 cl orange juice
+singapore sling
+    3.0 cl gin
+    1.5 cl cherry
+    0.75 cl triple sec
+    0.75 cl dom benedictine
+    1.0 cl grenadine
+    12.0 cl pineapple juice
+    1.5 cl lime juice
+    0.1 cl angostura bitters
+tequila sunrise
+    4.5 cl tequila
+    9.0 cl orange juice
+    1.5 cl grenadine
+b52
+    2.0 cl triple sec
+    2.0 cl irish cream
+    2.0 cl coffee liqueur
+barracuda
+    4.5 cl gold rum
+    1.5 cl galliano
+    6.0 cl pineapple juice
+    1.0 cl lime juice
+    6.0 cl prosecco
+bramble
+    4.0 cl gin
+    1.0 cl sugar syrup
+    1.5 cl lemon juice
+    1.5 cl blackberry liqueur
+dark n stormy
+    6.0 cl dark rum
+    10.0 cl ginger beer
+dirty martini
+    6.0 cl vodka
+    1.0 cl dry vermouth
+    1.0 cl olive juice
+espresso martini
+    5.0 cl vodka
+    1.0 cl coffee liqueur
+    1.0 cl sugar syrup
+    3.0 cl espresso
+french martini
+    4.5 cl vodka
+    1.5 cl raspberry liqueur
+    1.5 cl pineapple juice
+kamikaze
+    3.0 cl vodka
+    3.0 cl triple sec
+    3.0 cl lime juice
+lemon drop martini
+    2.5 cl  vodka citron
+    2.0 cl triple sec
+    1.5 cl lemon juice
+pisco sour
+    4.5 cl pisco
+    2.0 cl sugar syrup
+    3.0 cl lemon juice
+    1.0 cl egg white
+russian spring punch
+    2.5 cl vodka
+    1.5 cl creme de cassis
+    1.0 cl sugar syrup
+    2.5 cl lemon juice
+spritz veneziano
+    6.0 cl prosecco
+    4.0 cl aperol
+    4.0 cl soda water
+tommys margarita
+    4.5 cl tequila
+    1.5 cl lime juice
+    1.0 cl agave nectar
+vampiro
+    5.0 cl tequila
+    7.0 cl tomato juice
+    3.0 cl orange juice
+    1.0 cl lime juice
+    0.5 cl honey
+    0.1 cl worchestershire sauce
+vesper
+    6.0 cl gin
+    1.5 cl vodka
+    0.75 cl lillet blonde
+yellow bird
+    3.0 cl bacardi
+    1.5 cl galliano
+    1.5 cl triple sec
+    1.5 cl lime juice
