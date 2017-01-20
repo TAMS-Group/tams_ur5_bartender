@@ -13,11 +13,11 @@ int main(int argc, char** argv)
 	project16_manipulation::PourBottleGoal goal2;
 		
 	// Fill in goal 1 here
-	goal.bottle_id = "bottle";
+	goal.bottle_id = "bacardi";
 	goal.portion_size = 10.0;
 		
 	// Fill in goal 1 here
-	goal2.bottle_id = "bottle_2";
+	goal2.bottle_id = "tequila";
 	goal2.portion_size = 10.0;
 	
 
@@ -32,13 +32,15 @@ int main(int argc, char** argv)
 
 	
 	// Send goal 2
-	client.sendGoal(goal2);
-	client.waitForResult();
-	if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED && client.getResult()->success)
-		printf("Yay! The Bottle 2 has been poured!");
-    else
-		printf("Noo! Something failed with pouring bottle 2!");
-	printf("Current State: %s\n", client.getState().toString().c_str());
+	if(false){
+		client.sendGoal(goal2);
+		client.waitForResult();
+		if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED && client.getResult()->success)
+			printf("Yay! The Bottle 2 has been poured!");
+		else
+			printf("Noo! Something failed with pouring bottle 2!");
+		printf("Current State: %s\n", client.getState().toString().c_str());
+	}
 	return 0;
 
 

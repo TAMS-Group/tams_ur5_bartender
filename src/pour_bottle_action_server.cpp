@@ -74,7 +74,7 @@ class GrabPourPlace  {
 
 		//configure planner
 		arm.setPlannerId("RRTConnectkConfigDefault");
-		arm.setPlanningTime(20.0);
+		arm.setPlanningTime(30.0);
 	}
 
 	void despawnObject(std::string object_id){
@@ -238,7 +238,7 @@ class GrabPourPlace  {
 		arm.setPathConstraints(constraints);
 
 		//arm.setPlannerId("PRMstarkConfigDefault");
-		arm.setPlanningTime(90.0);
+		arm.setPlanningTime(30.0);
 
 		//move arm
 		moveit::planning_interface::MoveGroup::Plan plan;
@@ -461,9 +461,10 @@ class GrabPourPlace  {
 		//Define which steps should be run (should be scoped enum)
 		bool run_grab_bottle = true; 
 		bool run_move_to_glass = true; 
-		bool run_pour_bottle = true; 
-		bool run_move_back = true; 
-		bool run_place_bottle = true;
+		bool run_pour_bottle = false; 
+		bool run_move_back = false; 
+		bool run_place_bottle = false;
+		bool run_back_to_default = false;
 
 		cleanup();
 
@@ -501,12 +502,10 @@ class GrabPourPlace  {
 			CurrentAttempt = 0;
 			while(!grab_bottle(bottle.id)){
 				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM){
-					feedback.task_state = "Grabbing bottle failed -> skiping stuff";
+					feedback.task_state = std::string("Grabbing bottle " + bottle.id) + std::string(" FAILED in attempt(s): " + CurrentAttempt);
 					as_->publishFeedback(feedback);
 					as_->setAborted();
 					run_move_to_glass = false;
-					run_pour_bottle = false;
-					run_move_back = false;
 				}
 			}
 			feedback.task_state = std::string("Bottle grasped " + bottle.id) + std::string(" in attempt(s): " + CurrentAttempt);
@@ -517,21 +516,21 @@ class GrabPourPlace  {
 		//Step 2: Move bottle to glass
 		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
 		if(run_move_to_glass) {
-			CurrentAttempt = 1;
-			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .245);
-			while(!execute_plan(move_bottle)){
+			moveit::planning_interface::MoveGroup::Plan move_bottle;
+			CurrentAttempt = 0;
+			while(CurrentAttempt++<NUM_RETRIES_AFTER_JAM){
+				feedback.task_state = std::string("Current attempt: " + CurrentAttempt);
+				as_->publishFeedback(feedback);
 				move_bottle = get_move_bottle_plan(glass_pose, .245);
-				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
-					feedback.task_state = "Moving bottle to glass failed -> skiping pouring part";
+				if(!move_bottle.trajectory_.joint_trajectory.points.empty()){
+					execute_plan(move_bottle);
+					reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
+					feedback.task_state = std::string("Bottle moved to glass in " + CurrentAttempt) + " attempt(s)";
 					as_->publishFeedback(feedback);
-					as_->setAborted();
-					run_pour_bottle = false;
+					ros::Duration(1.0).sleep();
+					run_pour_bottle = true;
 				}
 			}
-			reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
-			feedback.task_state = std::string("Bottle moved to glass in " + CurrentAttempt) + " attempt(s)";
-			as_->publishFeedback(feedback);
-			ros::Duration(1.0).sleep();
 		}
 
 
@@ -540,6 +539,8 @@ class GrabPourPlace  {
 			if (!pour_bottle_in_glass(bottle, glass)) {
 				as_->setAborted();
 				return;
+			} else {
+				run_move_back = true;
 			}
 			feedback.task_state = "Pouring succeeded";
 			as_->publishFeedback(feedback);
@@ -550,48 +551,52 @@ class GrabPourPlace  {
 		//Step 4: Move bottle back to start position
 		if (run_move_back) {
 			CurrentAttempt = 0;
-			while(!execute_plan(move_bottle_back)){
-				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
-					as_->setAborted();
-					return;
+			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+				if(execute_plan(move_bottle_back)) {
+					feedback.task_state = std::string("Bottle moved back to start position in " + CurrentAttempt) + " attempt(s)";
+					as_->publishFeedback(feedback);
+					ros::Duration(1.0).sleep();
+					run_place_bottle = true;
+					break;
 				}
 			}
-			feedback.task_state = std::string("Bottle moved back to start position in " + CurrentAttempt) + " attempt(s)";
-			as_->publishFeedback(feedback);
-			ros::Duration(1.0).sleep();
 		}
 
 
 		//Step 5: Place bottle down and release
 		if (run_place_bottle) {
 			CurrentAttempt = 0;
-			while(!placeBottleDown(bottle.id)){
-				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
-					as_->setAborted();
-					return;
+			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+				if(placeBottleDown(bottle.id)) {
+					feedback.task_state = std::string("Bottle placed on table in " + CurrentAttempt) + " attempt(s)";
+					as_->publishFeedback(feedback);
+					run_back_to_default = true;
+					break;
 				}
 			}
-			feedback.task_state = std::string("Bottle placed on table in " + CurrentAttempt) + " attempt(s)";
-			as_->publishFeedback(feedback);
 		}
 
 		//Move arm to default position
-		if (!move_back()) {
-		as_->setAborted();
-		return;
+		if (run_back_to_default){
+			CurrentAttempt = 0;
+			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+				if (move_back()) {
+					feedback.task_state = "Arm moved back to default position";
+					as_->publishFeedback(feedback);
+					ros::Duration(3.0).sleep();
+					
+					//despawn objects and move arm to home (if not already happened)
+					cleanup();
+
+					//Send result message
+					project16_manipulation::PourBottleResult result;
+					result.success = true;
+					as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
+				}
+			}
 		}
-		feedback.task_state = "Arm moved back to default position";
-		as_->publishFeedback(feedback);
 
-		ros::Duration(3.0).sleep();
 
-		//despawn objects and move arm to home (if not already happened)
-		cleanup();
-
-		//Send result message
-		project16_manipulation::PourBottleResult result;
-		result.success = true;
-		as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
 	}
 };
 
