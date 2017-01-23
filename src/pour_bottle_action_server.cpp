@@ -522,13 +522,22 @@ class GrabPourPlace  {
 		//Step 2: Move bottle to glass
 		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
 		if(run_move_to_glass) {
-			CurrentAttempt = 1;
-			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(bottle.id, glass_pose, .3);
-			while(!execute_plan(move_bottle)){
+			moveit::planning_interface::MoveGroup::Plan move_bottle;
+			CurrentAttempt = 0;
+			while(CurrentAttempt++<NUM_RETRIES_AFTER_JAM){
+				feedback.task_state = std::string("Current attempt: " + CurrentAttempt);
+				as_->publishFeedback(feedback);
 				move_bottle = get_move_bottle_plan(bottle.id, glass_pose, .3);
+				if(!move_bottle.trajectory_.joint_trajectory.points.empty()){
+					reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
+					execute_plan(move_bottle);
+					feedback.task_state = std::string("Bottle moved to glass in " + CurrentAttempt) + " attempt(s)";
+					as_->publishFeedback(feedback);
+					ros::Duration(1.0).sleep();
+					run_pour_bottle = true;
+				}
 			}
 		}
-
 
 		//Step 3: Perform pouring motion
 		if(run_pour_bottle) {
