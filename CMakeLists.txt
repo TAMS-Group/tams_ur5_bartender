@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs 
   sensor_msgs
   moveit_msgs
+  pr2016_msgs
   image_transport
   tf
   visualization_msgs

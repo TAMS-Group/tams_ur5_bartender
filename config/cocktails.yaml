@@ -1,6 +1,15 @@
 # Cocktails
 cocktails:
 - cocktail:
+    name: 'TAMS libre'
+    ingredients:
+        - incr:
+            type: 'bacardi'
+            amount: 3.0
+        - incr:
+            type: 'tequila'
+            amount: 3.0
+- cocktail:
     name: 'alexander'
     ingredients:
         - incr:

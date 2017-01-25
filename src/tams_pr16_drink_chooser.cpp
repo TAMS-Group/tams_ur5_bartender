@@ -12,6 +12,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <project16_coordinator/CocktailAction.h>
 #include <project16_manipulation/PourBottleAction.h>
+#include <pr2016_msgs/CocktailList.h>
 
 
 //TO-DO hardcoded array of need IDS - find in recognized objects and print results for testing!
@@ -55,7 +56,9 @@ public:
 
         ros::NodeHandle nh;
 
-        sub_ = nh.subscribe("recognizedObjects", 10, &DrinkChooser::objectsCallback, this);
+        sub_ = nh.subscribe("recognizedObjects", 1000, &DrinkChooser::objectsCallback, this);
+        
+        object_pub_ = nh.advertise<pr2016_msgs::CocktailList>("availableCocktails", 1000);
 
         pnh.getParam("cocktails", cocktails_);
 
@@ -130,7 +133,6 @@ public:
             project16_manipulation::PourBottleGoal goal;
             current_incr_ = std::distance(incr.begin(), incr.find(it->first)) + 1;
 
-
             std::stringstream ss;
             ss << it->first;
             std::string name = ss.str();
@@ -148,7 +150,7 @@ public:
         if (success_) {
             feedback_.task_state = "Finished mixing " + ordered_cocktail.getName();
             ROS_INFO_STREAM("Finished mixing " << ordered_cocktail.getName());
-        }else{
+        } else {
             feedback_.task_state = "Failed mixing " + ordered_cocktail.getName();
             ROS_INFO_STREAM("Failed mixing " << ordered_cocktail.getName());
         }
@@ -176,10 +178,40 @@ public:
         as_->publishFeedback(feedback_);
     }
 
+    void sendCocktailList() {
+        pr2016_msgs::CocktailList clist;
+
+        for (int i = 0; i < cocktails_db_.size(); i++) {
+            bool avail = true;
+            std::map<std::string, double> incr = cocktails_db_[i].getIngredients();
+            std::map<std::string, double>::iterator it;
+            
+            for (it = incr.begin(); (it != incr.end()) && avail; it++) {
+                std::stringstream ss;
+                ss << it->first;
+                std::string name = ss.str();
+                bool incrAvail = false;
+                for (int32_t j = 0; j < bottles_.size(); ++j) {
+                    if (name == bottles_[j]) {
+                        incrAvail = true;
+                    }
+                }
+                if (!incrAvail) {
+                    avail = false;
+                }
+            }
+            clist.cocktails.push_back(cocktails_db_[i].getName());
+            clist.available.push_back(avail);        
+        }
+
+        object_pub_.publish(clist);
+    }
+
 private:
     std::string mapFrameId_;
     std::string objFramePrefix_;
     ros::Subscriber sub_;
+    ros::Publisher object_pub_;
     XmlRpc::XmlRpcValue cocktails_;
     std::vector <Cocktail> cocktails_db_;
     std::vector <std::string> bottles_;
@@ -197,5 +229,10 @@ int main(int argc, char **argv) {
     DrinkChooser sync;
 
     ros::Rate loop_rate(1);
+    while (ros::ok()) {
+        sync.sendCocktailList();
+        ros::spinOnce();
+        loop_rate.sleep();        
+    }
     ros::spin();
 }
