@@ -107,6 +107,7 @@ public:
         
         feedback_.task_state = "Recived order for cocktail " + goal->cocktail;
         ROS_INFO_STREAM("Recived order for cocktail " << goal->cocktail);
+        as_->publishFeedback(feedback_);
 
         for (int i = 0; i < cocktails_db_.size(); i++) {
             if (cocktails_db_[i].getName() == goal->cocktail) {
