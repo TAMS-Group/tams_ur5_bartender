@@ -25,8 +25,9 @@ bool USE_BOTTLE_PUBLISHER = true;
 bool OBJECTS_RECOGNIZED = true;
 const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
 
-std::vector<moveit_msgs::CollisionObject> bottles_;
+std::map<std::string, moveit_msgs::CollisionObject> bottles_;
 
+const int NUM_RETRIES_AFTER_JAM = 5;
 const tf::TransformListener* listener = NULL;
 
 
@@ -50,11 +51,11 @@ class GrabPourPlace  {
 	
 	public:
 	std::map<std::string, ObjectDescription> object_map;
-
+	
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
 		//Create dummy objects
-		ObjectDescription glass = {{0, 0.04, 0.12}, {0.20, 0.10, 0.0}};
+		ObjectDescription glass = {{0, 0.04, 0.12}, {0.15, 0.15, 0.0}};
 		object_map["glass"] = glass;
 
 		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
@@ -73,7 +74,7 @@ class GrabPourPlace  {
 
 		//configure planner
 		arm.setPlannerId("RRTConnectkConfigDefault");
-		arm.setPlanningTime(20.0);
+		arm.setPlanningTime(30.0);
 	}
 
 	void despawnObject(std::string object_id){
@@ -95,7 +96,7 @@ class GrabPourPlace  {
 		planning_scene_diff_client.call(srv);
 	}
 
-	moveit_msgs::CollisionObject spawnObject(std::string objectID){
+	moveit_msgs::CollisionObject spawnObject(std::string objectID, float zOffset = 0.0){
 
 		moveit_msgs::CollisionObject object;
 
@@ -114,7 +115,7 @@ class GrabPourPlace  {
 		pose.position.x = objProps.pos[0];
 		pose.position.y = objProps.pos[1];
 		//pose.position.z = objProps.pos[2];
-		pose.position.z = objProps.dim[2] / 2;
+		pose.position.z = objProps.dim[2] / 2 + zOffset;
 
 		object.primitives.push_back(primitive);
 		object.primitive_poses.push_back(pose);
@@ -213,15 +214,15 @@ class GrabPourPlace  {
 		return bool(arm.execute(plan));
 	}
 
-	moveit::planning_interface::MoveGroup::Plan get_move_bottle_plan(geometry_msgs::Pose pose, float zOffset) {
+	moveit::planning_interface::MoveGroup::Plan get_move_bottle_plan(std::string bottle_id, geometry_msgs::Pose pose, float zOffset) {
 		//Create orientation constraint - bottle up
 		moveit_msgs::Constraints constraints;
 		moveit_msgs::OrientationConstraint ocm;
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
 		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = M_PI / 9;
-		ocm.absolute_y_axis_tolerance = M_PI / 9;
+		ocm.absolute_x_axis_tolerance = M_PI / 5;
+		ocm.absolute_y_axis_tolerance = M_PI / 5;
 		ocm.absolute_z_axis_tolerance = 2*M_PI;
 		ocm.weight = 1.0;
 		constraints.orientation_constraints.push_back(ocm);
@@ -237,12 +238,35 @@ class GrabPourPlace  {
 		arm.setPathConstraints(constraints);
 
 		//arm.setPlannerId("PRMstarkConfigDefault");
-		arm.setPlanningTime(45.0);
+		arm.setPlanningTime(30.0);
 
 		//move arm
 		moveit::planning_interface::MoveGroup::Plan plan;
+		std::vector<std::string> ids;
+		ids.push_back(bottle_id);
+		std::map<std::string, moveit_msgs::AttachedCollisionObject> attached_objects = planning_scene_interface_.getAttachedObjects(ids);
+		moveit_msgs::AttachedCollisionObject attached_bottle = attached_objects[bottle_id];
+		moveit_msgs::CollisionObject bottle = attached_bottle.object;
+		moveit_msgs::CollisionObject stub_bottle = spawnObject("bottle", .05);
+
+		gripper.detachObject(bottle_id);
+		despawnObject(bottle_id);
+		attached_bottle.object = stub_bottle;
+		planning_scene_interface_.applyAttachedCollisionObject(attached_bottle);
+
+		ros::Duration(5.0).sleep();
 		arm.plan(plan);
+
+		gripper.detachObject("bottle");
+		despawnObject("bottle");
+		attached_bottle.object = bottle;
+		planning_scene_interface_.applyAttachedCollisionObject(attached_bottle);
+
+		for(int i = 0; i<attached_bottle.touch_links.size(); i++) {
+			ROS_INFO_STREAM("Touch link" << attached_bottle.touch_links[i]);
+		}
 		arm.clearPathConstraints();
+		ros::Duration(2.0).sleep();
 		return plan;
 	}
 
@@ -253,11 +277,11 @@ class GrabPourPlace  {
 		moveit::planning_interface::MoveGroup::Plan pour_forward;
 		moveit_msgs::RobotTrajectory trajectory;
 		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(false, bottle, glass), 0.03, 3, trajectory);
-		ROS_INFO("Pouring trajectory (%.2f%% acheived)", success_percentage * 100.0);
+		ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
 		if(success_percentage < 1.0) {
 			ROS_INFO("Trying other direction!");
 			success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(true, bottle, glass), 0.03, 3, trajectory);
-			ROS_INFO("Pouring trajectory (%.2f%% acheived)", success_percentage * 100.0);
+			ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
 		}
 
 		bool success = ( success_percentage > 0.95 );
@@ -296,8 +320,8 @@ class GrabPourPlace  {
 		//pouring is described in a circular motion
 		int dFactor = inverse_direction ? -1 : 1;
 		int steps = 10; //number of waypoints
-		float pScale = 0.7; //max pouring angle in percent (100% is M_PI)
-		float radius = bottle.primitives[0].dimensions[0] / 2; //radius is half the bottle height (motion radius)
+		float pScale = 0.6; //max pouring angle in percent (100% is M_PI)
+		float radius =  get_bottle_height(bottle.id) - bottle.primitives[0].dimensions[0] / 2 ;
 		float glass_radius = glass.primitives[0].dimensions[1] / 2; //glass radius is half the glass width
 		float startZ = start_pose.position.z; 
 		float startY = start_pose.position.y;
@@ -317,14 +341,10 @@ class GrabPourPlace  {
 
 	void cleanup() {
 		ROS_INFO("Cleanup");
-		moveit_msgs::PlanningScene planning_scene;
-		for(int i = 0; i< bottles_.size(); i++) {
-			despawnObject(bottles_[i].id);
-		}
-		bottles_.clear(); 
 		despawnObject("bottle");
 		despawnObject("bacardi");
 		despawnObject("tequila");
+		bottles_.clear(); 
 		despawnObject("glass");
 		gripper.setNamedTarget("basic_open");
 		gripper.move();
@@ -397,15 +417,8 @@ class GrabPourPlace  {
 	}
 
 	float get_bottle_height(std::string bottle_id) {
-		moveit_msgs::CollisionObject bottle;
+		moveit_msgs::CollisionObject bottle = bottles_[bottle_id];
 		float height = 0.0;
-		for(int i = 0; i< bottles_.size(); i++) {
-			if(bottles_[i].id == bottle_id) {
-				ROS_INFO_STREAM("Bottle found: " << bottles_[i].id);
-				bottle = bottles_[i];
-				break;
-			}
-		}
 		for(int i = 0; i < bottle.primitives.size(); i++) {
 			height += bottle.primitives[i].dimensions[0];
 		}
@@ -439,7 +452,7 @@ class GrabPourPlace  {
 				ROS_INFO_STREAM("Bottle " << object.type.key);
 				object.id = object.type.key;
 				planning_scene_interface_.applyCollisionObject(object); 
-				bottles_.push_back(object);
+				bottles_[object.id] = object;
 			}
 		}
 	}
@@ -460,9 +473,10 @@ class GrabPourPlace  {
 		//Define which steps should be run (should be scoped enum)
 		bool run_grab_bottle = true; 
 		bool run_move_to_glass = true; 
-		bool run_pour_bottle = true; 
-		bool run_move_back = true; 
-		bool run_place_bottle = true;
+		bool run_pour_bottle = false; 
+		bool run_move_back = false; 
+		bool run_place_bottle = false;
+		bool run_back_to_default = false;
 
 		cleanup();
 
@@ -472,13 +486,7 @@ class GrabPourPlace  {
 		if(USE_BOTTLE_PUBLISHER) {
 			recognizeBottles();
 			ros::Duration(2.0).sleep();
-			for(int i = 0; i< bottles_.size(); i++) {
-				if(bottles_[i].id == bottle_id) {
-					ROS_INFO_STREAM("Bottle found: " << bottles_[i].id);
-					bottle = bottles_[i];
-					break;
-				}
-			}
+			bottle = bottles_[bottle_id];
 		} else {
 			//Spawn bottle
 			bottle = spawnObject("bottle");
@@ -493,38 +501,51 @@ class GrabPourPlace  {
 		feedback.task_state = "Objects spawned";
 		as_->publishFeedback(feedback);
 
-		//Grab bottle
+		int CurrentAttempt;
+
+		//Step 1: Grab bottle
 		if(run_grab_bottle) {
-			if(!grab_bottle(bottle.id))  {
-				as_->setAborted();
-				return;
+			CurrentAttempt = 0;
+			while(!grab_bottle(bottle.id)){
+				if(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM){
+					feedback.task_state = std::string("Grabbing bottle " + bottle.id) + std::string(" FAILED in attempt(s): " + CurrentAttempt);
+					as_->publishFeedback(feedback);
+					as_->setAborted();
+					run_move_to_glass = false;
+				}
 			}
-			feedback.task_state = "Bottle grasped" + bottle.id;
+			feedback.task_state = std::string("Bottle grasped " + bottle.id) + std::string(" in attempt(s): " + CurrentAttempt);
 			as_->publishFeedback(feedback);
 			ros::Duration(1.0).sleep();
 		}
 
-
-		//Move bottle to glass
+		//Step 2: Move bottle to glass
 		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
 		if(run_move_to_glass) {
-			moveit::planning_interface::MoveGroup::Plan move_bottle = get_move_bottle_plan(glass_pose, .245);
-			reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
-			if(!execute_plan(move_bottle)) {
-				as_->setAborted();
-				return;
+			moveit::planning_interface::MoveGroup::Plan move_bottle;
+			CurrentAttempt = 0;
+			while(CurrentAttempt++<NUM_RETRIES_AFTER_JAM){
+				feedback.task_state = std::string("Current attempt: " + CurrentAttempt);
+				as_->publishFeedback(feedback);
+				move_bottle = get_move_bottle_plan(bottle.id, glass_pose, .3);
+				if(!move_bottle.trajectory_.joint_trajectory.points.empty()){
+					reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
+					execute_plan(move_bottle);
+					feedback.task_state = std::string("Bottle moved to glass in " + CurrentAttempt) + " attempt(s)";
+					as_->publishFeedback(feedback);
+					ros::Duration(1.0).sleep();
+					run_pour_bottle = true;
+				}
 			}
-			feedback.task_state = "Bottle moved to glass";
-			as_->publishFeedback(feedback);
-			ros::Duration(1.0).sleep();
 		}
 
-
-		//Perform pouring motion
+		//Step 3: Perform pouring motion
 		if(run_pour_bottle) {
 			if (!pour_bottle_in_glass(bottle, glass)) {
 				as_->setAborted();
 				return;
+			} else {
+				run_move_back = true;
 			}
 			feedback.task_state = "Pouring succeeded";
 			as_->publishFeedback(feedback);
@@ -532,45 +553,55 @@ class GrabPourPlace  {
 		}
 
 
-		//Move bottle back to start position
+		//Step 4: Move bottle back to start position
 		if (run_move_back) {
-			if (!execute_plan(move_bottle_back)) {
-				as_->setAborted();
-				return;
+			CurrentAttempt = 0;
+			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+				if(execute_plan(move_bottle_back)) {
+					feedback.task_state = std::string("Bottle moved back to start position in " + CurrentAttempt) + " attempt(s)";
+					as_->publishFeedback(feedback);
+					ros::Duration(1.0).sleep();
+					run_place_bottle = true;
+					break;
+				}
 			}
-			feedback.task_state = "Bottle moved back to start position";
-			as_->publishFeedback(feedback);
-			ros::Duration(1.0).sleep();
 		}
 
 
-		//Place bottle down and release
+		//Step 5: Place bottle down and release
 		if (run_place_bottle) {
-			if (!placeBottleDown(bottle.id)) {
-				as_->setAborted();
-				return;
+			CurrentAttempt = 0;
+			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+				if(placeBottleDown(bottle.id)) {
+					feedback.task_state = std::string("Bottle placed on table in " + CurrentAttempt) + " attempt(s)";
+					as_->publishFeedback(feedback);
+					run_back_to_default = true;
+					break;
+				}
 			}
-			feedback.task_state = "Bottle placed on table";
-			as_->publishFeedback(feedback);
 		}
 
 		//Move arm to default position
-		if (!move_back()) {
-		as_->setAborted();
-		return;
+		if (run_back_to_default){
+			CurrentAttempt = 0;
+			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+				if (move_back()) {
+					feedback.task_state = "Arm moved back to default position";
+					as_->publishFeedback(feedback);
+					ros::Duration(3.0).sleep();
+					
+					//despawn objects and move arm to home (if not already happened)
+					cleanup();
+
+					//Send result message
+					project16_manipulation::PourBottleResult result;
+					result.success = true;
+					as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
+				}
+			}
 		}
-		feedback.task_state = "Arm moved back to default position";
-		as_->publishFeedback(feedback);
 
-		ros::Duration(3.0).sleep();
 
-		//despawn objects and move arm to home (if not already happened)
-		cleanup();
-
-		//Send result message
-		project16_manipulation::PourBottleResult result;
-		result.success = true;
-		as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
 	}
 };
 
