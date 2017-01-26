@@ -9,7 +9,7 @@ for line in f1:
 	line = line.lstrip(" ")
 	line = line.rstrip("\n")
 	split = line.split(" ")
-        f2.write("        - incr:\n")
+        f2.write("        - ingr:\n")
         f2.write("            type: '" + " ".join(split[2:]) + "'\n")
         f2.write("            amount: " + split[0] + "\n")
     else:
