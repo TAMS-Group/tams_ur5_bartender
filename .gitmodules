@@ -19,19 +19,3 @@
 [submodule "project16_manipulation"]
 	path = project16_manipulation
 	url = ssh://gitolite@git.mafiasi.de/masterproject-intelligent-robotics/2016-masterproject-intelligent-robotics/project16_manipulation.git
-[submodule "moveit_ros"]
-	path = moveit_ros
-	url = https://github.com/ros-planning/moveit_ros.git
-	branch = indigo-devel
-[submodule "srdfdom"]
-	path = srdfdom
-	url = https://github.com/ros-planning/srdfdom.git
-	branch = indigo-devel
-[submodule "moveit_msgs"]
-	path = moveit_msgs
-	url = https://github.com/ros-planning/moveit_msgs.git
-	branch = indigo-devel
-[submodule "moveit"]
-	path = moveit
-	url = https://github.com/ros-planning/moveit.git
-	branch = indigo-devel
