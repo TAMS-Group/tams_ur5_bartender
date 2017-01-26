@@ -1,0 +1,6 @@
+<launch>
+    <!--Starting project16_maniplation-->
+    <node pkg="project16_manipulation" type="grasp_planning_service" name="plan_grasps_service" />
+    <node pkg="project16_manipulation" type="pour_bottle_action_server" name="pour_bottle_action_server" />
+    
+</launch>
