@@ -104,6 +104,9 @@ public:
     void mix(const project16_coordinator::CocktailGoalConstPtr& goal) {
         Cocktail ordered_cocktail;
         bool success = false;
+        
+        feedback_.task_state = "Recived order for cocktail " + goal->cocktail;
+        ROS_INFO_STREAM("Recived order for cocktail " << goal->cocktail);
 
         for (int i = 0; i < cocktails_db_.size(); i++) {
             if (cocktails_db_[i].getName() == goal->cocktail) {
