@@ -305,10 +305,7 @@ class GrabPourPlace  {
 
 			//reverse pouring trajectory
 			moveit::planning_interface::MoveGroup::Plan pour_backward;
-			robot_trajectory::RobotTrajectory rTrajectory(arm.getRobotModel(),"arm");
-			rTrajectory.setRobotTrajectoryMsg((*arm.getCurrentState()), trajectory);
-			rTrajectory.reverse();
-			rTrajectory.getRobotTrajectoryMsg(pour_backward.trajectory_);
+            reverse_trajectory(trajectory, pour_backward.trajectory_);
 
 			if(!arm.execute(pour_forward)) {
 				//TODO: handle failure
@@ -546,88 +543,81 @@ class GrabPourPlace  {
 
 		// State Machine
 		int CurrentAttempt;
-		enum state { run_grab_bottle2, run_move_to_glass2, run_pour_bottle2, run_move_back2, run_place_bottle2, run_back_to_default2, Exit, OK };
+		enum state { run_grab_bottle2, run_move_to_glass2, run_pour_bottle2, run_move_back2, run_place_bottle2, run_back_to_default2, run_cleanup, Exit, OK };
 		state currentState = run_grab_bottle2;
 		state failedAtState = OK;
 
 		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
 		moveit::planning_interface::MoveGroup::Plan move_bottle;
+
+        project16_manipulation::PourBottleResult result;
 		
 		do {
 			switch(currentState) {
 					
 				case run_grab_bottle2:
 					CurrentAttempt = 1;
+					currentState = run_move_to_glass2;
 					ROS_INFO_STREAM("STATE 1: run_grab_bottle2; Attempt " << CurrentAttempt);
 					while (!grab_bottle(bottle.id)) 
 					{
-						if (!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) 
+						if (CurrentAttempt++ == NUM_RETRIES_AFTER_JAM) 
 						{
 							ROS_INFO_STREAM("run_grab_bottle2 bottle still failed after all " << CurrentAttempt << " attempts..");
-							currentState = Exit;
+							currentState = run_cleanup;
 							failedAtState = run_grab_bottle2;
 							break;
-						} else {
-							currentState = run_grab_bottle2;
-							break;
 						}
-						ROS_INFO_STREAM("STATE 1: run_grab_bottle2; Attempt " << CurrentAttempt);
-					}
-					if (failedAtState==OK)
-					{ 
-						ros::Duration(1.0).sleep();
-						ROS_INFO_STREAM("run_grab_bottle2 succeeded with attempt " << CurrentAttempt);
-						currentState = run_move_to_glass2;
-					}
-					break;
+                        ROS_INFO_STREAM("STATE 1: run_grab_bottle2; Attempt " << CurrentAttempt);
+                    }
+                    if (failedAtState==OK)
+                    { 
+                        ROS_INFO_STREAM("run_grab_bottle2 succeeded with attempt " << CurrentAttempt);
+                    }
+                    ros::Duration(1.0).sleep();
+                    break;
 					
 					
-				case run_move_to_glass2:
-					CurrentAttempt = 1;
-					ROS_INFO_STREAM("STATE 2: run_move_to_glass2; Attempt " << CurrentAttempt);
-					do
-					{
-						do
-						{
-							move_bottle = get_move_bottle_plan(bottle.id, glass_pose, .3);
-							if (!CurrentAttempt++<NUM_RETRIES_AFTER_JAM)
-							{	
-								currentState = run_move_back2;
-								failedAtState = run_move_to_glass2;
-								break;
-							}
-							ROS_INFO_STREAM("STATE 2: run_move_to_glass2; Attempt " << CurrentAttempt);
-						} while (move_bottle.trajectory_.joint_trajectory.points.empty());
-						
-						if (failedAtState==run_move_to_glass2)
-						{
-							break;
-						}
-						reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
-					} while( !execute_plan(move_bottle) );
-					
-					if (failedAtState!=run_move_to_glass2)
-					{ 
-						ROS_INFO_STREAM("run_move_to_glass2 succeeded with attempt " << CurrentAttempt);
-						ros::Duration(1.0).sleep();
-						currentState = run_pour_bottle2;
-					}
-					break;
-					
+                case run_move_to_glass2:
+                    CurrentAttempt = 1;
+                    currentState = run_pour_bottle2;
+                    ROS_INFO_STREAM("STATE 2: run_move_to_glass2; Attempt " << CurrentAttempt);
+                    do {
+                        do {
+                            move_bottle = get_move_bottle_plan(bottle.id, glass_pose, .3);
+                            if (CurrentAttempt++ == NUM_RETRIES_AFTER_JAM)
+                            {	
+                                currentState = run_place_bottle2;
+                                failedAtState = run_move_to_glass2;
+                                break;
+                            }
+                            ROS_INFO_STREAM("STATE 2: run_move_to_glass2; Attempt " << CurrentAttempt);
+                        } while (move_bottle.trajectory_.joint_trajectory.points.empty());
+
+                        if (failedAtState==run_move_to_glass2)
+                        {
+                            break;
+                        }
+                        reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_);
+                    } while( !execute_plan(move_bottle) );
+
+                    if (failedAtState!=run_move_to_glass2)
+                    { 
+                        ROS_INFO_STREAM("run_move_to_glass2 succeeded with attempt " << CurrentAttempt);
+                    }
+                    ros::Duration(1.0).sleep();
+                    break;
+
 					
 				case run_pour_bottle2:
-					if (!pour_bottle_in_glass(bottle, glass)) {
-						//as_->setAborted();
-						//return;
-						failedAtState = run_pour_bottle2;
-						currentState = run_move_back2; // TODO what do here? -> bottle still in hand, possibly stuck somewhere in the middle of the pouring motion..						
-					} else {
-					ROS_INFO_STREAM("run_pour_bottle2 succeeded");
 					currentState = run_move_back2;
+					if (!pour_bottle_in_glass(bottle, glass)) {
+						failedAtState = run_pour_bottle2;
+					} else ROS_INFO_STREAM("run_pour_bottle2 succeeded");
 					ros::Duration(1.0).sleep();
-					}
 					break;
 
+                    /*
 					if(false){
 					CurrentAttempt = 1;
 					ROS_INFO_STREAM("STATE 3: run_pour_bottle2; Attempt " << CurrentAttempt);
@@ -650,49 +640,49 @@ class GrabPourPlace  {
 					}
 					break;
 					}
+                    */
 					
 				case run_move_back2:
-					CurrentAttempt = 1;
-					ROS_INFO_STREAM("STATE 4: run_move_back2; Attempt " << CurrentAttempt);
-					while(!execute_plan(move_bottle_back))
-					{
-						if (!CurrentAttempt++<NUM_RETRIES_AFTER_JAM)
-						{
-							currentState = Exit;
-							failedAtState = run_move_back2;
-							break;
-						}
-						ROS_INFO_STREAM("STATE 4: run_move_back2; Attempt " << CurrentAttempt);
-					}
-					if (failedAtState!=run_move_back2)
-					{ 
-						ros::Duration(1.0).sleep();
-						ROS_INFO_STREAM("run_move_back2 succeeded with attempt " << CurrentAttempt);
-						currentState = run_place_bottle2;
-					} else { currentState = Exit; }
-					break;
+                    CurrentAttempt = 1;
+                    ROS_INFO_STREAM("STATE 4: run_move_back2; Attempt " << CurrentAttempt);
+                    while(!execute_plan(move_bottle_back))
+                    {
+                        if (CurrentAttempt++ == NUM_RETRIES_AFTER_JAM)
+                        {
+                            currentState = Exit;
+                            failedAtState = run_move_back2;
+                            break;
+                        }
+                        ROS_INFO_STREAM("STATE 4: run_move_back2; Attempt " << CurrentAttempt);
+                    }
+                    if (failedAtState!=run_move_back2)
+                    { 
+                        ROS_INFO_STREAM("run_move_back2 succeeded with attempt " << CurrentAttempt);
+                        currentState = run_place_bottle2;
+                    }
+                    ros::Duration(1.0).sleep();
+                    break;
 
 					
-				case run_place_bottle2:
-					CurrentAttempt = 1;
-					ROS_INFO_STREAM("STATE 5: run_place_bottle2; Attempt " << CurrentAttempt);
-					while(!placeBottleDown(bottle.id)) 
-					{
-						if (!CurrentAttempt++<NUM_RETRIES_AFTER_JAM)
-						{
-							currentState = Exit;
-							failedAtState = run_place_bottle2;
-							break;
-						}
-						ROS_INFO_STREAM("STATE 5: run_place_bottle2; Attempt " << CurrentAttempt);
-					}
-					if (failedAtState!=run_place_bottle2)
-					{ 
-						ros::Duration(1.0).sleep();
-						ROS_INFO_STREAM("run_place_bottle2 succeeded with attempt " << CurrentAttempt);
-						currentState = run_back_to_default2;
-					} else { currentState = Exit; }
-					break;
+                case run_place_bottle2:
+                    CurrentAttempt = 1;
+                    ROS_INFO_STREAM("STATE 5: run_place_bottle2; Attempt " << CurrentAttempt);
+                    while(!placeBottleDown(bottle.id)) 
+                    {
+                        if (CurrentAttempt++ == NUM_RETRIES_AFTER_JAM)
+                        {
+                            failedAtState = Exit;
+                            break;
+                        }
+                        ROS_INFO_STREAM("STATE 5: run_place_bottle2; Attempt " << CurrentAttempt);
+                    }
+                    if (failedAtState!=run_place_bottle2)
+                    { 
+                        ROS_INFO_STREAM("run_place_bottle2 succeeded with attempt " << CurrentAttempt);
+                        currentState = run_cleanup; //TODO: handle failure
+                    } 
+                    ros::Duration(1.0).sleep();
+                    break;
 
 
 				case run_back_to_default2:
@@ -700,44 +690,39 @@ class GrabPourPlace  {
 					ROS_INFO_STREAM("STATE 6: run_back_to_default2; Attempt " << CurrentAttempt);
 					while(!move_back()) 
 					{
-						if (!CurrentAttempt++<NUM_RETRIES_AFTER_JAM)
+						if (CurrentAttempt++ == NUM_RETRIES_AFTER_JAM)
 						{
 							ROS_INFO_STREAM("run_back_to_default2 failed..");
-							currentState = Exit;
 							failedAtState = run_back_to_default2;
 							break;
 						}
 						ROS_INFO_STREAM("STATE 6: run_back_to_default2; Attempt " << CurrentAttempt);
-					}
-					if (failedAtState!=run_back_to_default2)
-					{ 
-						ros::Duration(3.0).sleep();
-						ROS_INFO_STREAM("run_back_to_default2 succeeded with attempt " << CurrentAttempt);
-						currentState = Exit;
-					} else { currentState = Exit; }
-					break;
+                    }
+                    currentState = run_cleanup;
+                    if (failedAtState != run_back_to_default2)
+                    { 
+                        ROS_INFO_STREAM("run_back_to_default2 succeeded with attempt " << CurrentAttempt);
+                    }
+                    ros::Duration(3.0).sleep();
+                    break;
 					
 					
-				case Exit:
-					ROS_INFO_STREAM("State 7: Exit");
-					//despawn objects and move arm to home (if not already happened)
-					cleanup();
-					
-					if(failedAtState==OK) {
-						//Send result message
-						project16_manipulation::PourBottleResult result;
-						result.success = true;
-						as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
-					} else {
-						as_->setAborted();
-						//return;
-					}
-					break;
-			}
-		} while(currentState != Exit);
+				case run_cleanup:
+					ROS_INFO_STREAM("STATE 7: run_cleanup");
+                    //despawn objects and move arm to home (if not already happened)
+                    cleanup();
+                    result.success = failedAtState == OK;
+                    currentState = Exit;
+                    break;
+            }
+        } while(currentState != Exit);
 
-
-	}
+        if(result.success) {
+            as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
+        } else {
+            as_->setAborted();
+        }
+    }
 };
 
 int main(int argc, char** argv)
