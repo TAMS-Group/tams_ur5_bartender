@@ -55,7 +55,7 @@ class GrabPourPlace  {
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
 		//Create dummy objects
-		ObjectDescription glass = {{0, 0.04, 0.12}, {0.15, 0.15, 0.0}};
+		ObjectDescription glass = {{0, 0.04, 0.12}, {0.40, 0.20, 0.0}};
 		object_map["glass"] = glass;
 
 		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
@@ -96,7 +96,7 @@ class GrabPourPlace  {
 		planning_scene_diff_client.call(srv);
 	}
 
-	moveit_msgs::CollisionObject spawnObject(std::string objectID, float zOffset = 0.0){
+	moveit_msgs::CollisionObject spawnObject(std::string objectID, float xPos = -1.0, float yPos = -1.0, float zOffset = 0.0){
 
 		moveit_msgs::CollisionObject object;
 
@@ -112,8 +112,8 @@ class GrabPourPlace  {
 
 		geometry_msgs::Pose pose;
 		pose.orientation.w = 1;
-		pose.position.x = objProps.pos[0];
-		pose.position.y = objProps.pos[1];
+		pose.position.x = xPos != -1.0 ? xPos : objProps.pos[0];
+		pose.position.y = yPos != -1.0 ? yPos : objProps.pos[1];
 		//pose.position.z = objProps.pos[2];
 		pose.position.z = objProps.dim[2] / 2 + zOffset;
 
@@ -238,7 +238,7 @@ class GrabPourPlace  {
 		arm.setPathConstraints(constraints);
 
 		//arm.setPlannerId("PRMstarkConfigDefault");
-		arm.setPlanningTime(30.0);
+		arm.setPlanningTime(45.0);
 
 		//move arm
 		moveit::planning_interface::MoveGroup::Plan plan;
@@ -246,8 +246,15 @@ class GrabPourPlace  {
 		ids.push_back(bottle_id);
 		std::map<std::string, moveit_msgs::AttachedCollisionObject> attached_objects = planning_scene_interface_.getAttachedObjects(ids);
 		moveit_msgs::AttachedCollisionObject attached_bottle = attached_objects[bottle_id];
+		float xPos = -1.0;
+		float yPos = -1.0;
+		if(bottles_.count(bottle_id) == 1) {
+			xPos = bottles_[bottle_id].primitive_poses[0].position.x;
+			yPos = bottles_[bottle_id].primitive_poses[0].position.y;
+		}	
+
 		moveit_msgs::CollisionObject bottle = attached_bottle.object;
-		moveit_msgs::CollisionObject stub_bottle = spawnObject("bottle", .05);
+		moveit_msgs::CollisionObject stub_bottle = spawnObject("bottle", xPos, yPos, .05);
 
 		gripper.detachObject(bottle_id);
 		despawnObject(bottle_id);
@@ -276,15 +283,19 @@ class GrabPourPlace  {
 		// Plan pouring trajectory (forward)
 		moveit::planning_interface::MoveGroup::Plan pour_forward;
 		moveit_msgs::RobotTrajectory trajectory;
-		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(false, bottle, glass), 0.03, 3, trajectory);
+		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints_with_axis("Y", false, bottle, glass), 0.03, 3, trajectory);
 		ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
 		if(success_percentage < 1.0) {
 			ROS_INFO("Trying other direction!");
-			success_percentage = arm.computeCartesianPath(compute_pouring_waypoints(true, bottle, glass), 0.03, 3, trajectory);
+			success_percentage = arm.computeCartesianPath(compute_pouring_waypoints_with_axis("X", true, bottle, glass), 0.03, 3, trajectory);
 			ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
+			if(success_percentage < 1.0) {
+				ROS_INFO("Trying other direction!");
+				success_percentage = arm.computeCartesianPath(compute_pouring_waypoints_with_axis("X", false, bottle, glass), 0.03, 3, trajectory);
+				ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0); }
 		}
 
-		bool success = ( success_percentage > 0.95 );
+		bool success =( success_percentage > 0.95 );
 		if(success) {
 			pour_forward.trajectory_ = trajectory;
 
@@ -311,31 +322,45 @@ class GrabPourPlace  {
 		return success;
 	}
 
-	std::vector<geometry_msgs::Pose> compute_pouring_waypoints(bool inverse_direction, moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
+	std::vector<geometry_msgs::Pose> compute_pouring_waypoints_with_axis(std::string axis, bool inverse_direction, moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
 		arm.setPoseReferenceFrame("world");
 		geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
 		geometry_msgs::Pose target_pose = start_pose;
 		std::vector<geometry_msgs::Pose> waypoints;
 		waypoints.push_back(start_pose); // first point of trajectory - necessary?
 		//pouring is described in a circular motion
-		int dFactor = inverse_direction ? -1 : 1;
+		int dFactor = inverse_direction ? 1 : -1;
 		int steps = 10; //number of waypoints
 		float pScale = 0.6; //max pouring angle in percent (100% is M_PI)
 		float radius =  get_bottle_height(bottle.id) - bottle.primitives[0].dimensions[0] / 2 ;
 		float glass_radius = glass.primitives[0].dimensions[1] / 2; //glass radius is half the glass width
-		float startZ = start_pose.position.z; 
+		float glass_height = glass.primitives[0].dimensions[0]; 
+		float glass_offset = 1.0;
+		float startX = start_pose.position.x;
 		float startY = start_pose.position.y;
+		float startZ = start_pose.position.z; 
+		float max_cos = cos(pScale * M_PI);
+		float zDistance = 0.3 + radius - glass_height - 0.05;
 		for(int i = 0; i <= steps; i++) {
 			float angle = pScale * M_PI * i / steps;
 			float tilt_factor = pow((float) i / steps, 2);
+			float translation = dFactor * (sin(angle) * radius +  tilt_factor * glass_radius);
 			ROS_INFO_STREAM("computing waypoint for angle " << angle);
-			target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI + dFactor * angle, 0, 0); //rotate around X-axis
-			//linear translation described by sine and cosine
-			target_pose.position.y = startY + dFactor * (sin(angle) * radius +  tilt_factor * glass_radius);
-			target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 1.1 * tilt_factor) * radius;
+			if(axis == "Y") {
+				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, -dFactor * angle, 0);
+				target_pose.position.x = startX + translation;
+
+			} else { //X Axis
+				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI + dFactor * angle, 0, 0);
+				target_pose.position.y = startY + translation;
+			}
+		//	target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 1.1 * tilt_factor) * radius;
+			target_pose.position.z = startZ + (cos(M_PI - angle) + 1) * radius - tilt_factor * zDistance;
+
+			//target_pose.position.z = startZ - pow((float) tilt_factor, 2) * zDistance;
+
 			waypoints.push_back(target_pose);
 		}
-
 		return waypoints;
 	}
 
@@ -366,8 +391,9 @@ class GrabPourPlace  {
 
 		arm.setPoseReferenceFrame("table_top");
 		geometry_msgs::Pose place_pose = place_pose_stamped.pose;
-		;
-		place_pose.position.z = get_bottle_height(bottle_id) / 2 + 0.005; // table distance and bottle height offset
+		moveit_msgs::CollisionObject bottle = bottles_[bottle_id];
+		float grasp_height = bottle.primitives[0].dimensions[0] / 2;
+		place_pose.position.z = grasp_height + 0.005; // table distance and bottle height offset
 		ROS_INFO_STREAM(place_pose);
 
 		//move bottle down
@@ -395,7 +421,12 @@ class GrabPourPlace  {
 
 		//release object
 		despawnObject(bottle_id);
-		moveit_msgs::CollisionObject bottle = spawnObject(bottle_id);
+		if(bottles_.count(bottle_id) == 1) {
+			bottle = bottles_[bottle_id];
+			planning_scene_interface_.applyCollisionObject(bottle); 
+		} else {
+			bottle = spawnObject(bottle_id);
+		}
 
 		ros::Duration(1.0).sleep();
 
@@ -483,21 +514,29 @@ class GrabPourPlace  {
 		std::string bottle_id = goal->bottle_id;
 		moveit_msgs::CollisionObject bottle;
 
+		project16_manipulation::PourBottleFeedback feedback;
 		if(USE_BOTTLE_PUBLISHER) {
 			recognizeBottles();
 			ros::Duration(2.0).sleep();
-			bottle = bottles_[bottle_id];
+			if(bottles_.count(bottle_id) == 1) {
+				bottle = bottles_[bottle_id];
+			}
+			else {
+				feedback.task_state = std::string("Bottle " + bottle.id + " does not exist!");
+				as_->publishFeedback(feedback);
+				as_->setAborted();
+				return;
+			}
 		} else {
 			//Spawn bottle
 			bottle = spawnObject("bottle");
 		}
 		ROS_INFO_STREAM("Bottles Recognized");
 		geometry_msgs::Pose bottle_pose = bottle.primitive_poses[0];
-		bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, -M_PI / 2);
+		bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, -M_PI/2);
 		moveit_msgs::CollisionObject glass = spawnObject("glass");
 		geometry_msgs::Pose glass_pose = glass.primitive_poses[0];
 		glass_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		project16_manipulation::PourBottleFeedback feedback;
 		feedback.task_state = "Objects spawned";
 		as_->publishFeedback(feedback);
 
@@ -512,6 +551,7 @@ class GrabPourPlace  {
 					as_->publishFeedback(feedback);
 					as_->setAborted();
 					run_move_to_glass = false;
+					return;
 				}
 			}
 			feedback.task_state = std::string("Bottle grasped " + bottle.id) + std::string(" in attempt(s): " + CurrentAttempt);
@@ -535,6 +575,7 @@ class GrabPourPlace  {
 					as_->publishFeedback(feedback);
 					ros::Duration(1.0).sleep();
 					run_pour_bottle = true;
+					break;
 				}
 			}
 		}
@@ -571,7 +612,7 @@ class GrabPourPlace  {
 		//Step 5: Place bottle down and release
 		if (run_place_bottle) {
 			CurrentAttempt = 0;
-			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+			while(CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
 				if(placeBottleDown(bottle.id)) {
 					feedback.task_state = std::string("Bottle placed on table in " + CurrentAttempt) + " attempt(s)";
 					as_->publishFeedback(feedback);
@@ -584,7 +625,7 @@ class GrabPourPlace  {
 		//Move arm to default position
 		if (run_back_to_default){
 			CurrentAttempt = 0;
-			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+			while(CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
 				if (move_back()) {
 					feedback.task_state = "Arm moved back to default position";
 					as_->publishFeedback(feedback);
@@ -597,10 +638,14 @@ class GrabPourPlace  {
 					project16_manipulation::PourBottleResult result;
 					result.success = true;
 					as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
+					
 				}
+			
 			}
+			
 		}
-
+                 as_->setAborted();
+		
 
 	}
 };
