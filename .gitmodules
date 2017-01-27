@@ -26,3 +26,5 @@
 	path = project16_manipulation
 	url = ssh://gitolite@git.mafiasi.de/masterproject-intelligent-robotics/2016-masterproject-intelligent-robotics/project16_manipulation.git
 	branch = origin/master
+[status]
+  submoduleSummary = true
