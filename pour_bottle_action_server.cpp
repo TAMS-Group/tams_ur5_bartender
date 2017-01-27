@@ -55,7 +55,7 @@ class GrabPourPlace  {
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
 		//Create dummy objects
-		ObjectDescription glass = {{0, 0.04, 0.12}, {0.15, 0.15, 0.0}};
+		ObjectDescription glass = {{0, 0.04, 0.12}, {0.40, 0.20, 0.0}};
 		object_map["glass"] = glass;
 
 		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
@@ -96,7 +96,7 @@ class GrabPourPlace  {
 		planning_scene_diff_client.call(srv);
 	}
 
-	moveit_msgs::CollisionObject spawnObject(std::string objectID, float zOffset = 0.0){
+	moveit_msgs::CollisionObject spawnObject(std::string objectID, float xPos = -1, float yPos = -1, float zOffset = 0.0){
 
 		moveit_msgs::CollisionObject object;
 
@@ -112,8 +112,8 @@ class GrabPourPlace  {
 
 		geometry_msgs::Pose pose;
 		pose.orientation.w = 1;
-		pose.position.x = objProps.pos[0];
-		pose.position.y = objProps.pos[1];
+		pose.position.x = xPos != -1 ? xPos : objProps.pos[0];
+		pose.position.y = yPos != -1 ? yPos : objProps.pos[0];
 		//pose.position.z = objProps.pos[2];
 		pose.position.z = objProps.dim[2] / 2 + zOffset;
 
@@ -247,7 +247,9 @@ class GrabPourPlace  {
 		std::map<std::string, moveit_msgs::AttachedCollisionObject> attached_objects = planning_scene_interface_.getAttachedObjects(ids);
 		moveit_msgs::AttachedCollisionObject attached_bottle = attached_objects[bottle_id];
 		moveit_msgs::CollisionObject bottle = attached_bottle.object;
-		moveit_msgs::CollisionObject stub_bottle = spawnObject("bottle", .05);
+		float x_pos = bottle.primitive_poses[0].position.x;
+		float y_pos = bottle.primitive_poses[1].position.y;
+		moveit_msgs::CollisionObject stub_bottle = spawnObject("bottle", x_pos, y_pos, .05);
 
 		gripper.detachObject(bottle_id);
 		despawnObject(bottle_id);
@@ -535,6 +537,7 @@ class GrabPourPlace  {
 					as_->publishFeedback(feedback);
 					ros::Duration(1.0).sleep();
 					run_pour_bottle = true;
+					break;
 				}
 			}
 		}
@@ -571,7 +574,7 @@ class GrabPourPlace  {
 		//Step 5: Place bottle down and release
 		if (run_place_bottle) {
 			CurrentAttempt = 0;
-			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+			while(CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
 				if(placeBottleDown(bottle.id)) {
 					feedback.task_state = std::string("Bottle placed on table in " + CurrentAttempt) + " attempt(s)";
 					as_->publishFeedback(feedback);
@@ -584,7 +587,7 @@ class GrabPourPlace  {
 		//Move arm to default position
 		if (run_back_to_default){
 			CurrentAttempt = 0;
-			while(!CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
+			while(CurrentAttempt++<NUM_RETRIES_AFTER_JAM) {
 				if (move_back()) {
 					feedback.task_state = "Arm moved back to default position";
 					as_->publishFeedback(feedback);
@@ -597,10 +600,14 @@ class GrabPourPlace  {
 					project16_manipulation::PourBottleResult result;
 					result.success = true;
 					as_->setSucceeded(result,"Grasping, constrained motion and pouring suceeded");
+					
 				}
+			
 			}
+			
 		}
-
+                 as_->setAborted();
+		
 
 	}
 };

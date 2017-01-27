@@ -1,9 +1,0 @@
-# Goal
-string bottle_id
-float32 portion_size
----
-# Result
-bool success
----
-# Feedback
-string task_state
