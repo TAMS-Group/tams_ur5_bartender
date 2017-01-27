@@ -14,7 +14,11 @@ int main(int argc, char** argv)
 	// Fill in goal 1 here
 	goal.bottle_id = "bacardi";
 	goal.portion_size = 10.0;
-
+		
+	// Fill in goal 1 here
+	goal2.bottle_id = "tequila";
+	goal2.portion_size = 10.0;
+	
 	// Send goal 1
 	client.sendGoal(goal);
 	client.waitForResult();
