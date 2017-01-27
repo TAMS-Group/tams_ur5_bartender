@@ -28,17 +28,18 @@ int main(int argc, char** argv)
     	else
 		printf("Noo! Something failed with pouring bottle 1!");
 	printf("Current State: %s\n", client.getState().toString().c_str());
-	
-       
-	
+
 	// Send goal 2
 	client.sendGoal(goal2);
 	client.waitForResult();
 	if (client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED && client.getResult()->success)
 		printf("Yay! The Bottle 2 has been poured!");
     	else
-		printf("Noo! Something failed with pouring bottle 1!");
+		printf("Noo! Something failed with pouring bottle 2!");
 	printf("Current State: %s\n", client.getState().toString().c_str());
+	
+       
+	
 
 
 	
