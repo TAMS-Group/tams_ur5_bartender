@@ -57,7 +57,7 @@ class GrabPourPlace  {
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
 		//Create dummy objects
-		ObjectDescription glass = {{0, 0.04, 0.12}, {0.25, 0.25, 0.0}};
+		ObjectDescription glass = {{0, 0.04, 0.12}, {0.35, 0.20, 0.0}};
 		object_map["glass"] = glass;
 
 		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
@@ -224,8 +224,8 @@ class GrabPourPlace  {
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
 		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = M_PI / 5;
-		ocm.absolute_y_axis_tolerance = M_PI / 5;
+		ocm.absolute_x_axis_tolerance = M_PI / 6;
+		ocm.absolute_y_axis_tolerance = M_PI / 6;
 		ocm.absolute_z_axis_tolerance = 2*M_PI;
 		ocm.weight = 1.0;
 		constraints.orientation_constraints.push_back(ocm);
@@ -241,8 +241,7 @@ class GrabPourPlace  {
 		arm.setPathConstraints(constraints);
 
 		//arm.setPlannerId("PRMstarkConfigDefault");
-		arm.setPlanningTime(20.0);
-
+		arm.setPlanningTime(45.0);
 
 		//move arm
 		moveit::planning_interface::MoveGroup::Plan plan;
@@ -423,9 +422,15 @@ class GrabPourPlace  {
 		//release object
 		despawnObject(bottle_id);
 		if(bottles_.count(bottle_id) == 1) {
+            ROS_INFO("Respawning bottle");
 			bottle = bottles_[bottle_id];
-			planning_scene_interface_.applyCollisionObject(bottle); 
-		} else {
+            for(int i = 0; i < bottle.primitive_poses.size(); i++) {
+                bottle.primitive_poses[i].position.x = place_pose.position.x;
+                bottle.primitive_poses[i].position.y = place_pose.position.y;
+            }
+            bottle.operation = bottle.ADD;
+            planning_scene_interface_.applyCollisionObject(bottle); 
+        } else {
 			bottle = spawnObject(bottle_id);
 		}
 
@@ -434,7 +439,8 @@ class GrabPourPlace  {
 		//move to retreat position
 		geometry_msgs::Pose post_place_pose = place_pose;
 		post_place_pose.position.y += 0.1;
-		post_place_pose.position.z += 0.1;
+		//post_place_pose.position.z += 0.1;
+        ROS_INFO_STREAM("Retreating pose" << post_place_pose);
 		std::vector<geometry_msgs::Pose> retreat_waypoints;
 		retreat_waypoints.push_back(post_place_pose);
 		moveit::planning_interface::MoveGroup::Plan retreat_plan;
@@ -445,7 +451,6 @@ class GrabPourPlace  {
 			return bool(arm.execute(retreat_plan));
 		else
 			return false;
-;
 	}
 
 	float get_bottle_height(std::string bottle_id) {
@@ -665,25 +670,25 @@ class GrabPourPlace  {
 
 					
                 case run_place_bottle2:
+                    currentState = run_back_to_default2;
                     CurrentAttempt = 1;
                     ROS_INFO_STREAM("STATE 5: run_place_bottle2; Attempt " << CurrentAttempt);
                     while(!placeBottleDown(bottle.id)) 
                     {
                         if (CurrentAttempt++ == NUM_RETRIES_AFTER_JAM)
                         {
-                            failedAtState = Exit;
+                            failedAtState = run_place_bottle2;
                             break;
                         }
                         ROS_INFO_STREAM("STATE 5: run_place_bottle2; Attempt " << CurrentAttempt);
                     }
-                    if (failedAtState!=run_place_bottle2)
+                    if (failedAtState == run_place_bottle2)
                     { 
                         ROS_INFO_STREAM("run_place_bottle2 succeeded with attempt " << CurrentAttempt);
-                        currentState = run_cleanup; //TODO: handle failure
+                        currentState = Exit; //TODO: handle failure
                     } 
                     ros::Duration(1.0).sleep();
                     break;
-
 
 				case run_back_to_default2:
 					CurrentAttempt = 1;
