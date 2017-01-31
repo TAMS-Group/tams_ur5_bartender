@@ -59,7 +59,7 @@ public:
         sub_ = nh.subscribe("recognizedObjects", 1000, &DrinkChooser::objectsCallback, this);
         
         //register publisher for available cocktails
-        object_pub_ = nh.advertise<pr2016_msgs::CocktailList>("availableCocktails", 1000);
+        object_pub_ = nh.advertise<pr2016_msgs::CocktailList>("availableCocktails", 1, true);
 
         pnh.getParam("cocktails", cocktails_);
 
