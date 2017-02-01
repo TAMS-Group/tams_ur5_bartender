@@ -57,7 +57,7 @@ class GrabPourPlace  {
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
 		//Create dummy objects
-		ObjectDescription glass = {{0, 0.04, 0.12}, {0.35, 0.20, 0.0}};
+		ObjectDescription glass = {{0, 0.04, 0.12}, {-0.3, 0.30, 0.0}};
 		object_map["glass"] = glass;
 
 		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
@@ -422,15 +422,15 @@ class GrabPourPlace  {
 		//release object
 		despawnObject(bottle_id);
 		if(bottles_.count(bottle_id) == 1) {
-            ROS_INFO("Respawning bottle");
+			ROS_INFO("Respawning bottle");
 			bottle = bottles_[bottle_id];
-            for(int i = 0; i < bottle.primitive_poses.size(); i++) {
-                bottle.primitive_poses[i].position.x = place_pose.position.x;
-                bottle.primitive_poses[i].position.y = place_pose.position.y;
-            }
-            bottle.operation = bottle.ADD;
-            planning_scene_interface_.applyCollisionObject(bottle); 
-        } else {
+			for(int i = 0; i < bottle.primitive_poses.size(); i++) {
+				bottle.primitive_poses[i].position.x = place_pose.position.x;
+				bottle.primitive_poses[i].position.y = place_pose.position.y;
+			}
+			bottle.operation = bottle.ADD;
+			planning_scene_interface_.applyCollisionObject(bottle); 
+		} else {
 			bottle = spawnObject(bottle_id);
 		}
 
@@ -438,9 +438,9 @@ class GrabPourPlace  {
 
 		//move to retreat position
 		geometry_msgs::Pose post_place_pose = place_pose;
-		post_place_pose.position.y += 0.1;
+		post_place_pose.position.x -= 0.1;
 		//post_place_pose.position.z += 0.1;
-        ROS_INFO_STREAM("Retreating pose" << post_place_pose);
+		ROS_INFO_STREAM("Retreating pose" << post_place_pose);
 		std::vector<geometry_msgs::Pose> retreat_waypoints;
 		retreat_waypoints.push_back(post_place_pose);
 		moveit::planning_interface::MoveGroup::Plan retreat_plan;
