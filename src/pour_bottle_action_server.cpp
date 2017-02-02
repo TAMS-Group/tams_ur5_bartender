@@ -29,7 +29,7 @@ const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
 
 std::map<std::string, moveit_msgs::CollisionObject> bottles_;
 
-const int NUM_RETRIES_AFTER_JAM = 7;
+const int NUM_RETRIES_AFTER_JAM = 5;
 const tf::TransformListener* listener = NULL;
 
 
@@ -57,7 +57,7 @@ class GrabPourPlace  {
 	GrabPourPlace() : arm(ARM_ID), gripper(GRIPPER_ID)
 	{
 		//Create dummy objects
-		ObjectDescription glass = {{0, 0.04, 0.12}, {-0.3, 0.30, 0.0}};
+		ObjectDescription glass = {{0, 0.04, 0.12}, {-0.15, 0.25, 0.0}};
 		object_map["glass"] = glass;
 
 		ObjectDescription bottle = {{0, 0.04, 0.3}, {-0.1, -0.1, 0}};
@@ -438,7 +438,7 @@ class GrabPourPlace  {
 
 		//move to retreat position
 		geometry_msgs::Pose post_place_pose = place_pose;
-		post_place_pose.position.x -= 0.1;
+		post_place_pose.position.x -= 0.15;
 		//post_place_pose.position.z += 0.1;
 		ROS_INFO_STREAM("Retreating pose" << post_place_pose);
 		std::vector<geometry_msgs::Pose> retreat_waypoints;
