@@ -17,6 +17,7 @@ git clone --recursive ssh://gitolite@git.mafiasi.de/masterproject-intelligent-ro
 ```
 
 However, if the host repository has already been cloned the "usual" way, the same thing can be achieved by explicitly initializing and updating the submodules:
+
 ```
 cd bartender-project
 git submodule update --init
@@ -32,10 +33,13 @@ git submodule update --init --remote
 ```
 
 If the HEAD of a submodule is detached which seems to happen quite often in the world of submodules, one can fix that with an ```git checkout master``` for that submodule or just do it for all via:
+
 ```
 git submodule foreach git checkout master
 ```
+
 Afterwards this might do the trick for pulling from the master:
+
 ```
 git submodule foreach git pull origin master
 ```
