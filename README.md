@@ -26,9 +26,9 @@ cd bartender-project
 git submodule update --init
 ```
 
-**Relevant for devel:
+**Relevant for devel:**
 
-The host repository, i.e. in our case "bartender-project", will point towards particular versions of the submodules and thus not automatically towards the newest commit on the master branch. Therefore, cloning or updating the submodules as described above might result in older commits rather than the newest commits on branches.**
+**The host repository, i.e. in our case "bartender-project", will point towards particular versions of the submodules and thus not automatically towards the newest commit on the master branch. Therefore, cloning or updating the submodules as described above might result in older commits rather than the newest commits on branches.**
 
 The [*remote* flag](https://git-scm.com/docs/git-submodule#git-submodule---remote) takes care of that:
 
