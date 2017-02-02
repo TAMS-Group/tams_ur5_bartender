@@ -32,8 +32,8 @@ bool serviceCB(moveit_msgs::GraspPlanning::Request &req, moveit_msgs::GraspPlann
   pose.header.frame_id = req.target.id;
   //gripper needs to roll around 180°, so that plugs are at the top
   pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0.0, 0.0);
-  pose.pose.position.z = 0;
-  pose.pose.position.x = -0.02;
+  pose.pose.position.z = 0.0;
+  pose.pose.position.x = -0.015;
   grasp.grasp_pose = pose;
 
   grasp.pre_grasp_approach.min_distance = 0.05;
