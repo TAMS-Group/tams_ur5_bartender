@@ -16,7 +16,7 @@ angel face
 aviation
     4.5 cl gin
     1.5 cl maraschino
-    1.5 cl lemon juice
+    1.5 cl lime juice
 bacardi
     4.5 cl bacardi
     2.0 cl lime juice
@@ -25,16 +25,16 @@ between the sheets
     3.0 cl cognac
     3.0 cl bacardi
     3.0 cl triple sec
-    2.0 cl lemon juice
+    2.0 cl lime juice
 casino
     4.0 cl gin
     1.0 cl maraschino
     1.0 cl orange bitters
-    1.0 cl lemon juice
+    1.0 cl lime juice
 clover club
     4.5 cl gin
     1.5 cl raspberry syrup
-    1.5 cl lemon juice
+    1.5 cl lime juice
     1.0 cl egg white
 daiquiri
     4.5 cl bacardi
@@ -49,12 +49,12 @@ dry martini
 gin fizz
     4.5 cl gin
     1.0 cl sugar syrup
-    3.0 cl lemon juice
+    3.0 cl lime juice
     8.0 cl soda water
 john collins
     4.5 cl gin
     1.5 cl sugar syrup
-    3.0 cl lemon juice
+    3.0 cl lime juice
     6.0 cl soda water
 manhattan
     5.0 cl whiskey
@@ -86,7 +86,7 @@ planters punch
     4.5 cl dark rum
     3.5 cl orange juice
     3.5 cl pineapple juice
-    2.0 cl lemon juice
+    2.0 cl lime juice
     1.0 cl grenadine
     1.0 cl sugar syrup
     0.3 cl angostura bitters
@@ -98,7 +98,7 @@ ramos gin fizz
     4.5 cl gin
     3.0 cl sugar syrup
     1.5 cl lime juice
-    1.5 cl lemon juice
+    1.5 cl lime juice
     6.0 cl cream
     0.3 orange flower water
     0.2 vanilla extract
@@ -116,7 +116,7 @@ screwdriver
 sidecar
     5.0 cl cognac
     2.0 cl triple sec
-    2.0 cl lemon juice
+    2.0 cl lime juice
 stinger
     5.0 cl cognac
     2.0 cl creme de menthe (white)
@@ -129,11 +129,11 @@ tuxedo
 whiskey sour
     4.5 cl bourbon
     1.5 cl sugar syrup
-    3.0 cl lemon juice
+    3.0 cl lime juice
 white lady
     4.0 cl gin
     3.0 cl triple sec
-    2.0 cl lemon juice
+    2.0 cl lime juice
 bellini
     10.0 cl prosecco
     5.0 cl peach puree
@@ -143,7 +143,7 @@ black russian
 bloody mary
     4.5 cl vodka
     9.0 cl tomato juice
-    1.5 cl lemon juice
+    1.5 cl lime juice
     0.3 cl worcestershire sauce
     0.1 cl tabasco
 caipirinha
@@ -163,7 +163,7 @@ cuba libre
     1.0 cl lime juice
 french 75
     3.0 cl gin
-    1.5 cl lemon juice
+    1.5 cl lime juice
     0.2 cl sugar syrup
     6.0 cl champagne
 french connection
@@ -210,8 +210,7 @@ long island ice tea
     1.5 cl vodka
     1.5 cl bacardi
     1.5 cl triple sec
-    3.0 cl simple syrup
-    2.5 cl lemon juice
+    2.5 cl lime juice
     6.0 cl cola
 mai-tai
     4.0 cl bacardi
@@ -280,7 +279,7 @@ barracuda
 bramble
     4.0 cl gin
     1.0 cl sugar syrup
-    1.5 cl lemon juice
+    1.5 cl lime juice
     1.5 cl blackberry liqueur
 dark n stormy
     6.0 cl dark rum
@@ -303,19 +302,19 @@ kamikaze
     3.0 cl triple sec
     3.0 cl lime juice
 lemon drop martini
-    2.5 cl  vodka citron
+    2.5 cl vodka citron
     2.0 cl triple sec
-    1.5 cl lemon juice
+    1.5 cl lime juice
 pisco sour
     4.5 cl pisco
     2.0 cl sugar syrup
-    3.0 cl lemon juice
+    3.0 cl lime juice
     1.0 cl egg white
 russian spring punch
     2.5 cl vodka
     1.5 cl creme de cassis
     1.0 cl sugar syrup
-    2.5 cl lemon juice
+    2.5 cl lime juice
 spritz veneziano
     6.0 cl prosecco
     4.0 cl aperol

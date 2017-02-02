@@ -55,7 +55,7 @@ cocktails:
             type: 'maraschino'
             amount: 1.5
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.5
 - cocktail:
     name: 'bacardi'
@@ -82,7 +82,7 @@ cocktails:
             type: 'triple sec'
             amount: 3.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 2.0
 - cocktail:
     name: 'casino'
@@ -97,7 +97,7 @@ cocktails:
             type: 'orange bitters'
             amount: 1.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.0
 - cocktail:
     name: 'clover club'
@@ -109,7 +109,7 @@ cocktails:
             type: 'raspberry syrup'
             amount: 1.5
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.5
         - ingr:
             type: 'egg white'
@@ -154,7 +154,7 @@ cocktails:
             type: 'sugar syrup'
             amount: 1.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 3.0
         - ingr:
             type: 'soda water'
@@ -169,7 +169,7 @@ cocktails:
             type: 'sugar syrup'
             amount: 1.5
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 3.0
         - ingr:
             type: 'soda water'
@@ -265,7 +265,7 @@ cocktails:
             type: 'pineapple juice'
             amount: 3.5
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 2.0
         - ingr:
             type: 'grenadine'
@@ -301,7 +301,7 @@ cocktails:
             type: 'lime juice'
             amount: 1.5
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.5
         - ingr:
             type: 'cream'
@@ -355,7 +355,7 @@ cocktails:
             type: 'triple sec'
             amount: 2.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 2.0
 - cocktail:
     name: 'stinger'
@@ -394,7 +394,7 @@ cocktails:
             type: 'sugar syrup'
             amount: 1.5
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 3.0
 - cocktail:
     name: 'white lady'
@@ -406,7 +406,7 @@ cocktails:
             type: 'triple sec'
             amount: 3.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 2.0
 - cocktail:
     name: 'bellini'
@@ -436,7 +436,7 @@ cocktails:
             type: 'tomato juice'
             amount: 9.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.5
         - ingr:
             type: 'worcestershire sauce'
@@ -496,7 +496,7 @@ cocktails:
             type: 'gin'
             amount: 3.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.5
         - ingr:
             type: 'sugar syrup'
@@ -637,10 +637,7 @@ cocktails:
             type: 'triple sec'
             amount: 1.5
         - ingr:
-            type: 'simple syrup'
-            amount: 3.0
-        - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 2.5
         - ingr:
             type: 'cola'
@@ -847,7 +844,7 @@ cocktails:
             type: 'sugar syrup'
             amount: 1.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.5
         - ingr:
             type: 'blackberry liqueur'
@@ -916,13 +913,13 @@ cocktails:
     name: 'lemon drop martini'
     ingredients:
         - ingr:
-            type: ' vodka citron'
+            type: 'vodka citron'
             amount: 2.5
         - ingr:
             type: 'triple sec'
             amount: 2.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 1.5
 - cocktail:
     name: 'pisco sour'
@@ -934,7 +931,7 @@ cocktails:
             type: 'sugar syrup'
             amount: 2.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 3.0
         - ingr:
             type: 'egg white'
@@ -952,7 +949,7 @@ cocktails:
             type: 'sugar syrup'
             amount: 1.0
         - ingr:
-            type: 'lemon juice'
+            type: 'lime juice'
             amount: 2.5
 - cocktail:
     name: 'spritz veneziano'
