@@ -4,7 +4,8 @@ This is the result of a two term master project at the [Technical Aspects of Mul
 
 
 ## Objective
-The goal of the project is to let an [UR5 robot arm](https://www.universal-robots.com/products/ur5-robot/) with [Robotiq 3-Finger Adaptive Robot Gripper](http://robotiq.com/products/industrial-robot-hand/) perform a complex grasping and pouring manipulation based on visual data.In other words, the robot arm is supposed prepare a drink following a cocktail recipe and based on user input from a web interface.
+The goal of the project is to let an [UR5 robot arm](https://www.universal-robots.com/products/ur5-robot/) with [Robotiq 3-Finger Adaptive Robot Gripper](http://robotiq.com/products/industrial-robot-hand/) perform a complex grasping and pouring manipulation based on visual data.
+In other words, the robot arm is supposed prepare a drink following a cocktail recipe and based on user input from a web interface.
 
 
 ## Getting Started
@@ -83,19 +84,19 @@ Do we want to set up a demo.launch file that can be used without the hardware?
 
 ## Submodules
 
-* "find_object_2d
+* ```find_object_2d```
 
-* "kinect_calibration"
+* ```kinect_calibration```
 
-* "pr2016_msgs"
+* ```pr2016_msgs```
 
-* "project16_coordinator"
+* ```project16_coordinator```
 
-* "project16_gui"
+* ```project16_gui```
 
-* "project16_image_processing"
+* ```project16_image_processing```
 
-* "project16_manipulation"
+* ```project16_manipulation```
 
 
 
