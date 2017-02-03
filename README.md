@@ -55,8 +55,8 @@ git submodule foreach git pull origin master
 * Manipulation
    * [MoveIt!](http://moveit.ros.org/)
      * we encountered a couple of bugs which we bypassed in the original code
-   * [```tams_ur5_setup.launch``` from the TAMS-Group and the corresponding dependencies](https://github.com/TAMS-Group/tams_ur5_setup/blob/master/tams_ur5_setup_bringup/launch/tams_ur5_setup.launch)
-     * we needed to change a couple of things which we haven't committed to cause no troubles, e.g. the table position in the URDF file 
+   * [```tams_ur5_setup```](https://github.com/TAMS-Group/tams_ur5_setup.git) with branch 'project2016'
+   * [```tams_ur5```](https://github.com/TAMS-Group/tams_ur5.git)
 * Image Processing
    * opencv?
    * kinect bla?
