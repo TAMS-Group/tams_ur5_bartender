@@ -125,6 +125,8 @@ public:
         //abort if cocktail not available
         if (ordered_cocktail.getName() == "") {
             ROS_ERROR_STREAM("Cocktail '" << goal->cocktail << "' not found");
+            feedback_.task_state = "Cocktail '" + goal->cocktail + "' not found";
+            as_->publishFeedback(feedback_);
             as_->setAborted();
             return;
         }
@@ -143,7 +145,7 @@ public:
 
         success_ = true;
         max_ingr_ = ingr.size();
-        //itterate over ingredients of cocktail
+        //iterate over ingredients of cocktail
         for (it = ingr.begin(); (it != ingr.end()) && success_; it++) {
             project16_manipulation::PourBottleGoal goal;
             current_ingr_ = std::distance(ingr.begin(), ingr.find(it->first)) + 1;
@@ -155,6 +157,8 @@ public:
             goal.portion_size = double(it->second);
 
             ROS_INFO_STREAM("Mixing " << goal.portion_size << " cl " << goal.bottle_id);
+            feedback_.task_state = "Mixing " + goal.portion_size + " cl " + goal.bottle_id;
+            as_->publishFeedback(feedback_);
             //send mixing goal of actual ingredient
             ac.sendGoal(goal,
                     boost::bind(&DrinkChooser::doneCB, this, _1, _2),
@@ -201,7 +205,7 @@ public:
     //generate available cocktail list
     void sendCocktailList() {
         pr2016_msgs::CocktailList clist;
-
+        bool iteratedThroughAllBottles = false;
         //iterate over all cocktails
         for (int i = 0; i < cocktails_db_.size(); i++) {
             bool avail = true;
@@ -219,7 +223,12 @@ public:
                     if (name == bottles_[j]) {
                         ingrAvail = true;
                     }
+                    //Add all available bottles to msg ONCE (on first for-loop)
+                    if(!iteratedThroughAllBottles){
+                        clist.recognizedBottles.push_back(bottles_[j]);
+                    }
                 }
+                iteratedThroughAllBottles = true;
                 if (!ingrAvail) {
                     avail = false;
                 }
