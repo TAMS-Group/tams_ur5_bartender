@@ -1,11 +1,10 @@
-
-# Bartender Project 2017
+# Bartender Project 2016/2017
+======
 This is the result of a two term master project at the [Technical Aspects of Multimodal Systems (TAMS) Group](https://tams-www.informatik.uni-hamburg.de/) at the [University of Hamburg](https://www.uni-hamburg.de/).
 
 
-
 ## Objective
-The goal of the project is to let an [UR5 robot arm](https://www.universal-robots.com/products/ur5-robot/) with [Robotiq 3-Finger Adaptive Robot Gripper](http://robotiq.com/products/industrial-robot-hand/) perform a complex grasping and pouring manipulation based on visual data. 
+The goal of the project is to let an [UR5 robot arm](https://www.universal-robots.com/products/ur5-robot/) with [Robotiq 3-Finger Adaptive Robot Gripper](http://robotiq.com/products/industrial-robot-hand/) perform a complex grasping and pouring manipulation based on visual data.In other words, the robot arm is supposed prepare a drink following a cocktail recipe and based on user input from a web interface.
 
 
 ## Getting Started
@@ -28,7 +27,7 @@ git submodule update --init
 
 **Relevant for devel:**
 
-**The host repository, i.e. in our case "bartender-project", will point towards particular versions of the submodules and thus not automatically towards the newest commit on the master branch. Therefore, cloning or updating the submodules as described above might result in older commits rather than the newest commits on branches.**
+**The host repository, in our case "bartender-project", will point towards particular versions of the submodules and thus not automatically towards the newest commit on the master branch. Therefore, cloning or updating the submodules as described above might result in older commits rather than the newest commits on branches.**
 
 The [*remote* flag](https://git-scm.com/docs/git-submodule#git-submodule---remote) takes care of that:
 
@@ -42,33 +41,61 @@ If the HEAD of a submodule is detached which seems to happen quite often in the 
 git submodule foreach git checkout master
 ```
 
-Afterwards this might do the trick for pulling from the master:
+An alternativ to the ```git submodule update --init --remote``` command and maybe easier to remember is the following:
 
 ```
 git submodule foreach git pull origin master
 ```
 
 
+
 ## Dependencies
 
-[MoveIt!](http://moveit.ros.org/)
+* Manipulation
+   * [MoveIt!](http://moveit.ros.org/)
+     * we encountered a couple of bugs which we bypassed in the original code
+   * [tams_ur5_setup.launch from the TAMS-Group and the corresponding dependencies](https://github.com/TAMS-Group/tams_ur5_setup/blob/master/tams_ur5_setup_bringup/launch/tams_ur5_setup.launch)
+     * we needed to change a couple of things which we haven't committed to cause no troubles, e.g. the table position in the URDF file 
+* Image Processing
+   *
+
+
+
+## Running The Bartender
+
+After getting the host repo and all the dependencies do a ```catkin_make``` and off you might go:
+
+
+
+### Run On Hardware
+
+```
+roslaunch project16_coordinator project16.launch
+```
+
+
+
+### Run In Simulation?
+
+Do we want to set up a demo.launch file that can be used without the hardware?
 
 
 
 ## Submodules
-#### "find_object_2d
 
-#### "kinect_calibration"
+* "find_object_2d
 
-#### "pr2016_msgs"
+* "kinect_calibration"
 
-#### "project16_coordinator"
+* "pr2016_msgs"
 
-#### "project16_gui"
+* "project16_coordinator"
 
-#### "project16_image_processing"
+* "project16_gui"
 
-#### "project16_manipulation"
+* "project16_image_processing"
+
+* "project16_manipulation"
 
 
 
