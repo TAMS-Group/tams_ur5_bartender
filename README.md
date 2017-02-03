@@ -1,5 +1,5 @@
 # Bartender Project 2016/2017
-======
+
 This is the result of a two term master project at the [Technical Aspects of Multimodal Systems (TAMS) Group](https://tams-www.informatik.uni-hamburg.de/) at the [University of Hamburg](https://www.uni-hamburg.de/).
 
 
@@ -54,11 +54,11 @@ git submodule foreach git pull origin master
 * Manipulation
    * [MoveIt!](http://moveit.ros.org/)
      * we encountered a couple of bugs which we bypassed in the original code
-   * [tams_ur5_setup.launch from the TAMS-Group and the corresponding dependencies](https://github.com/TAMS-Group/tams_ur5_setup/blob/master/tams_ur5_setup_bringup/launch/tams_ur5_setup.launch)
+   * [```tams_ur5_setup.launch``` from the TAMS-Group and the corresponding dependencies](https://github.com/TAMS-Group/tams_ur5_setup/blob/master/tams_ur5_setup_bringup/launch/tams_ur5_setup.launch)
      * we needed to change a couple of things which we haven't committed to cause no troubles, e.g. the table position in the URDF file 
 * Image Processing
-   *
-
+   * opencv?
+   * kinect bla?
 
 
 ## Running The Bartender
