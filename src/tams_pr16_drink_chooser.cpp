@@ -157,8 +157,8 @@ public:
             goal.portion_size = double(it->second);
 
             ROS_INFO_STREAM("Mixing " << goal.portion_size << " cl " << goal.bottle_id);
-            feedback_.task_state = "Mixing " + goal.portion_size + " cl " + goal.bottle_id;
-            as_->publishFeedback(feedback_);
+            //feedback_.task_state = "Mixing " + goal.portion_size + " cl " + goal.bottle_id;
+            //as_->publishFeedback(feedback_);
             //send mixing goal of actual ingredient
             ac.sendGoal(goal,
                     boost::bind(&DrinkChooser::doneCB, this, _1, _2),
