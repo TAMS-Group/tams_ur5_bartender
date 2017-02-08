@@ -52,20 +52,22 @@ git submodule foreach git pull origin master
 
 ## Dependencies
 
-* Manipulation
+* ```project16_manipulation```
    * [MoveIt!](http://moveit.ros.org/)
      * we encountered a couple of bugs which we bypassed in the original code
    * [```tams_ur5_setup```](https://github.com/TAMS-Group/tams_ur5_setup.git) with branch 'project2016'
    * [```tams_ur5```](https://github.com/TAMS-Group/tams_ur5.git)
-* Image Processing
+* ```project16_image_processing```
    * opencv?
    * kinect bla?
+* ```project16_gui```
+	* [```rosbridge_suite```](http://wiki.ros.org/rosbridge_suite)
+
 
 
 ## Running The Bartender
 
 After getting the host repo and all the dependencies do a ```catkin_make``` and off you might go:
-
 
 
 ### Run On Hardware
@@ -75,10 +77,15 @@ roslaunch project16_coordinator project16.launch
 ```
 
 
+### Run In Simulation
 
-### Run In Simulation?
+Simulate everything in RVIZ: the image processing part is completely omitted and covered by ```publishDemoBottles.launch```:
 
-Do we want to set up a demo.launch file that can be used without the hardware?
+```
+roslaunch project16_coordinator simulationProject16.launch 
+```
+
+
 
 
 
