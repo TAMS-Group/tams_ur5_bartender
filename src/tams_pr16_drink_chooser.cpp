@@ -16,6 +16,7 @@
 
 
 // Cocktail Object
+
 class Cocktail {
 public:
 
@@ -54,10 +55,10 @@ public:
         ros::NodeHandle pnh("~");
 
         ros::NodeHandle nh;
-        
+
         //register for recognized Objects 
         sub_ = nh.subscribe("recognizedObjects", 1000, &DrinkChooser::objectsCallback, this);
-        
+
         //register publisher for available cocktails
         object_pub_ = nh.advertise<pr2016_msgs::CocktailList>("availableCocktails", 1, true);
 
@@ -90,6 +91,7 @@ public:
     }
 
     //Save bottles to internal Bottle DB
+
     void objectsCallback(const pr2016_msgs::BarCollisionObjectArrayConstPtr & msg) {
         //delete old db
         bottles_.clear();
@@ -106,10 +108,11 @@ public:
     }
 
     // mixing action
+
     void mix(const project16_coordinator::CocktailGoalConstPtr& goal) {
         Cocktail ordered_cocktail;
         bool success = false;
-        
+
         //feedback received order
         feedback_.task_state = "Received order for cocktail " + goal->cocktail;
         ROS_INFO_STREAM("Received order for cocktail " << goal->cocktail);
@@ -134,7 +137,7 @@ public:
         //call pour bottle action server
         actionlib::SimpleActionClient<project16_manipulation::PourBottleAction> ac("pour_bottle", true);
         ac.waitForServer();
-        
+
         //send feedback
         feedback_.task_state = "Start mixing " + ordered_cocktail.getName();
         ROS_INFO_STREAM("Start mixing " << ordered_cocktail.getName());
@@ -203,6 +206,7 @@ public:
     }
 
     //generate available cocktail list
+
     void sendCocktailList() {
         pr2016_msgs::CocktailList clist;
         bool iteratedThroughAllBottles = false;
@@ -211,7 +215,7 @@ public:
             bool avail = true;
             std::map<std::string, double> ingr = cocktails_db_[i].getIngredients();
             std::map<std::string, double>::iterator it;
-            
+            std::string bottles = '';
             //iterate over all ingredients 
             for (it = ingr.begin(); (it != ingr.end()) && avail; it++) {
                 std::stringstream ss;
@@ -224,7 +228,7 @@ public:
                         ingrAvail = true;
                     }
                     //Add all available bottles to msg ONCE (on first for-loop)
-                    if(!iteratedThroughAllBottles){
+                    if (!iteratedThroughAllBottles) {
                         clist.recognizedBottles.push_back(bottles_[j]);
                     }
                 }
@@ -232,11 +236,15 @@ public:
                 if (!ingrAvail) {
                     avail = false;
                 }
+                //'=' delimiter bool, #' is the delimited of bottles, later used in gui js
+                bottles += name + '=' + ((ingrAvail) ? '1' : '0') + '#';
             }
             //add cocktail to cocktaillist
             clist.cocktails.push_back(cocktails_db_[i].getName());
             //true or false if mixable
-            clist.available.push_back(avail);        
+            clist.available.push_back(avail);
+            //add String of neededBottles + state
+            clist.neededBottles();
         }
 
         //publish topic
@@ -271,7 +279,7 @@ int main(int argc, char **argv) {
         //spin once so callbacks could be called
         ros::spinOnce();
         //sleep the rest of the time
-        loop_rate.sleep();        
+        loop_rate.sleep();
     }
     ros::spin();
 }
