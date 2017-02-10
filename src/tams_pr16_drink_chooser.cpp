@@ -215,7 +215,7 @@ public:
             bool avail = true;
             std::map<std::string, double> ingr = cocktails_db_[i].getIngredients();
             std::map<std::string, double>::iterator it;
-            std::string bottles = '';
+            std::string bottles = "";
             //iterate over all ingredients 
             for (it = ingr.begin(); (it != ingr.end()) && avail; it++) {
                 std::stringstream ss;
@@ -237,14 +237,14 @@ public:
                     avail = false;
                 }
                 //'=' delimiter bool, #' is the delimited of bottles, later used in gui js
-                bottles += name + '=' + ((ingrAvail) ? '1' : '0') + '#';
+                bottles += name + "=" + ((ingrAvail) ? "1" : "0") + "#";
             }
             //add cocktail to cocktaillist
             clist.cocktails.push_back(cocktails_db_[i].getName());
             //true or false if mixable
             clist.available.push_back(avail);
             //add String of neededBottles + state
-            clist.neededBottles();
+            clist.neededBottles.push_back(bottles);
         }
 
         //publish topic
