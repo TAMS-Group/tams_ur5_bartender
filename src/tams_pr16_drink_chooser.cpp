@@ -217,7 +217,7 @@ public:
             std::map<std::string, double>::iterator it;
             std::string bottles = "";
             //iterate over all ingredients 
-            for (it = ingr.begin(); (it != ingr.end()) && avail; it++) {
+            for (it = ingr.begin(); (it != ingr.end()); it++) {
                 std::stringstream ss;
                 ss << it->first;
                 std::string name = ss.str();
