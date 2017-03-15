@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
 	rospy
 	std_msgs
 	moveit_ros_planning_interface
+	moveit_visual_tools
+	moveit_core
 	tf
 )
 
