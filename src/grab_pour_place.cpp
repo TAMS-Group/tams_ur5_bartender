@@ -2,7 +2,10 @@
 #include <iostream>
 #include <stdio.h>
 
+#include <ros/ros.h>
+#include <moveit/robot_state/robot_state.h>
 #include <moveit/move_group_interface/move_group.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
@@ -12,7 +15,6 @@
 #include <manipulation_msgs/GraspPlanning.h>
 
 #include <cmath>
-#include <ros/ros.h>
 
 const std::string ARM_ID = "arm";
 const std::string GRIPPER_ID = "gripper";
@@ -26,6 +28,7 @@ class GrabPourPlace  {
 
 	moveit::planning_interface::MoveGroup arm;
 	moveit::planning_interface::MoveGroup gripper;
+	moveit_visual_tools::MoveItVisualToolsPtr mvt;
 
 	protected: 
 	ros::NodeHandle node_handle;
@@ -47,8 +50,13 @@ class GrabPourPlace  {
 		planning_scene_diff_client = node_handle.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
 		planning_scene_diff_client.waitForExistence();
 
-		arm.setPlannerId("RRTConnectkConfigDefault");
+		//arm.setPlannerId("RRTConnectkConfigDefault");
+		arm.setPlannerId("LBKPIECEkConfigDefault");
+
 		arm.setPlanningTime(20.0);
+		mvt.reset(new moveit_visual_tools::MoveItVisualTools("world","/moveit_visual_markers", arm.getRobotModel()));
+		mvt->loadTrajectoryPub("/move_group/display_valid_trajectory");
+
 	}
 
 	void despawnObject(std::string object_id){
@@ -139,6 +147,7 @@ class GrabPourPlace  {
 	void move_bottle(geometry_msgs::Pose pose) {
 		//Create orientation constraint - bottle up
 		moveit_msgs::Constraints constraints;
+		/*
 		moveit_msgs::OrientationConstraint ocm;
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
@@ -148,6 +157,8 @@ class GrabPourPlace  {
 		ocm.absolute_z_axis_tolerance = 2*M_PI;
 		ocm.weight = 1.0;
 		constraints.orientation_constraints.push_back(ocm);
+		*/
+		constraints.name = "s_model_tool0:upright";
 
 		//Z offset for pose
 		pose.position.z += 0.3;
@@ -223,6 +234,121 @@ class GrabPourPlace  {
 		arm.setNamedTarget("pour_default");
 		arm.move();
 	}
+
+	void move_with_constraint(moveit_msgs::Constraints constraints) {
+		arm.setPoseReferenceFrame("table_top");
+		geometry_msgs::Pose pose;
+		pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		pose.position.z = 0.3;
+		pose.position.x = 0.25;
+		pose.position.y = -0.2;
+		arm.setPoseTarget(pose);
+		ROS_INFO_STREAM("Moving to pose: " << pose);
+		moveit::planning_interface::MoveGroup::Plan plan;
+	       	arm.plan(plan);
+		arm.execute(plan);
+
+		ros::Duration(1.0).sleep();
+
+		//set target and constraints
+		pose.position.x = -0.3;
+		pose.position.y = 0.3;
+		arm.setPoseTarget(pose);
+		arm.setPathConstraints(constraints);
+
+		//Z offset for pose
+		ROS_INFO_STREAM("Moving with constraint to pose: " << pose);
+
+		//move arm
+		arm.plan(plan);
+		arm.execute(plan);
+
+		//remove constraints after movement
+		//arm.clearPathConstraints();
+	}
+
+	void move_to_start_pose(){
+		arm.setPoseReferenceFrame("table_top");
+		geometry_msgs::Pose pose;
+		pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		pose.position.z = 0.3;
+		pose.position.x = 0.25;
+		pose.position.y = -0.2;
+		arm.setPoseTarget(pose);
+		arm.move();
+	}
+
+	/**
+	 * Plans a constrained trajectory to a fixed pose.
+	 * Returns true, if the planned trajectory actually satisfies the constraints, else false.
+	 */
+	bool plan_with_constraints(moveit_msgs::Constraints constraints) {
+		//test pose as planning target (will be set as parameter)
+		geometry_msgs::Pose pose;
+		pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		pose.position.z = 0.3;
+		pose.position.x = -0.3;
+		pose.position.y = 0.3;
+		arm.setPoseTarget(pose);
+
+		//plan with constraints 
+		arm.setPoseReferenceFrame("table_top");
+		arm.setPathConstraints(constraints);
+		moveit::planning_interface::MoveGroup::Plan plan;
+	       	arm.plan(plan);
+		arm.clearPathConstraints();
+
+		//orientation constraint
+		moveit_msgs::Constraints validation_constraints;
+		moveit_msgs::OrientationConstraint ocm;
+		ocm.link_name = "s_model_tool0";
+		ocm.header.frame_id = "table_top";
+		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		ocm.absolute_x_axis_tolerance = 0.15;
+		ocm.absolute_y_axis_tolerance = 0.15;
+		ocm.absolute_z_axis_tolerance = M_PI;
+		ocm.weight = 1.0;
+		validation_constraints.orientation_constraints.push_back(ocm);
+
+		//check validity of trajectory
+		bool is_valid = trajectory_valid(plan.trajectory_, validation_constraints);
+		if(is_valid) {
+			ROS_INFO_STREAM("Trajectory is valid! Visualizing trajectory.");
+			//visualize trajectory in rviz
+			mvt->publishTrajectoryPath(plan.trajectory_, arm.getCurrentState(), false);
+			ros::Duration(1.0).sleep();
+			//arm.execute(plan);
+		} else {
+			ROS_ERROR("Trajectory is invalid!");
+		}
+		return is_valid;
+	}
+
+	/**
+	 * Tests if a given trajectory meets a specific constraint set.
+	 */
+	bool trajectory_valid(moveit_msgs::RobotTrajectory trajectory, moveit_msgs::Constraints constraints) {
+		kinematic_constraints::KinematicConstraintSet kset(arm.getRobotModel());
+		robot_state::Transforms no_transforms(arm.getRobotModel()->getModelFrame());
+		kset.add(constraints, no_transforms);
+		robot_state::RobotState rstate(arm.getRobotModel());
+		std::vector<trajectory_msgs::JointTrajectoryPoint> points = trajectory.joint_trajectory.points;
+		//iterative validation of all waypoints in the given trajectory
+		for(int i = 0; i < points.size(); i++) {
+			//create robot state for waypoint
+			for(int j = 0; j < points[i].positions.size(); j++) {
+				//TODO: check for valid array id
+				//ROS_INFO_STREAM("Checking joint: " <<  trajectory.joint_trajectory.joint_names[j] << " and position " << points[i].positions[j]);		
+				rstate.setJointPositions(trajectory.joint_trajectory.joint_names[j], (double *)&points[i].positions[j]);
+			}
+			rstate.update();
+			//return false if robot state does not satisfy constraints
+			if(!kset.decide(rstate).satisfied) {
+				return false;
+			}
+		}
+		return true;
+	}
 };
 
 int main(int argc, char** argv) {
@@ -231,12 +357,17 @@ int main(int argc, char** argv) {
 	spinner.start();
 
 	GrabPourPlace task_planner;
+	task_planner.move_to_start_pose();
+	ros::Duration(1.0).sleep();
 
+/*
 	//Spawn bottle and glass
 	moveit_msgs::CollisionObject bottle = task_planner.spawnObject("bottle");
 	moveit_msgs::CollisionObject glass = task_planner.spawnObject("glass");
 	geometry_msgs::Pose bottle_pose = bottle.primitive_poses[0];
 	geometry_msgs::Pose glass_pose = glass.primitive_poses[0];
+
+
 
 	if(task_planner.grab_bottle(bottle.id)) {
 		//move bottle to glass
@@ -251,4 +382,15 @@ int main(int argc, char** argv) {
 	ros::Duration(3.0).sleep();
 	//despawn objects and move arm to home
 	task_planner.cleanup();
+*/
+
+
+	//constraints with name as specified in the approximation graph database
+	moveit_msgs::Constraints constraints;
+	constraints.name = "s_model_tool0:upright";
+
+	while(ros::ok()) {
+		task_planner.plan_with_constraints(constraints);
+		ros::Duration(0.2).sleep();
+	}
 }
