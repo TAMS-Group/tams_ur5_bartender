@@ -338,7 +338,7 @@ class GrabPourPlace  {
 		//
 		//If this param is not set, the constraint 's_model_tool0:upright' is not recognized and therefore empty!
 		moveit_msgs::Constraints constraints;
-		constraints.name = "s_model_tool0:upright:10000:high";
+		constraints.name = "s_model_tool0:upright:5000:high";
 		
 		//validation constraint (used to check if planned trajectory is ok)
 		moveit_msgs::Constraints validation_constraints;
@@ -350,6 +350,7 @@ class GrabPourPlace  {
 		ocm.absolute_y_axis_tolerance = 0.6; // but still in workable range. -> Some 'invalid' results are acceptable.
 		ocm.absolute_z_axis_tolerance = M_PI;
 		ocm.weight = 1.0;
+		validation_constraints.name = constraints.name;
 		validation_constraints.orientation_constraints.push_back(ocm);
 
 		//this planner has better results somehow
@@ -362,7 +363,7 @@ class GrabPourPlace  {
 		//set target and constraints
 		arm.setPoseReferenceFrame("table_top");
 		arm.setPoseTarget(pose);
-		arm.setPathConstraints(constraints);
+		arm.setPathConstraints(validation_constraints);
 
 		//replace bottle collision object with primitive cylinder
 		std::vector<std::string> ids;
