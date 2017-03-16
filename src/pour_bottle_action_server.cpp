@@ -338,7 +338,7 @@ class GrabPourPlace  {
 		//
 		//If this param is not set, the constraint 's_model_tool0:upright' is not recognized and therefore empty!
 		moveit_msgs::Constraints constraints;
-		constraints.name = "s_model_tool0:upright";
+		constraints.name = "s_model_tool0:upright:10000:high";
 		
 		//validation constraint (used to check if planned trajectory is ok)
 		moveit_msgs::Constraints validation_constraints;
@@ -346,8 +346,8 @@ class GrabPourPlace  {
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
 		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = 0.3; //these tolerances are a bit higher than the preset constraint (0.15), 
-		ocm.absolute_y_axis_tolerance = 0.3; // but still in workable range. -> Some 'invalid' results are acceptable.
+		ocm.absolute_x_axis_tolerance = 0.6; //these tolerances are a bit higher than the preset constraint (0.15), 
+		ocm.absolute_y_axis_tolerance = 0.6; // but still in workable range. -> Some 'invalid' results are acceptable.
 		ocm.absolute_z_axis_tolerance = M_PI;
 		ocm.weight = 1.0;
 		validation_constraints.orientation_constraints.push_back(ocm);
