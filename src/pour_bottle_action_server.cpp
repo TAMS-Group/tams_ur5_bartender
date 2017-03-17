@@ -155,7 +155,7 @@ class GrabPourPlace  {
 		gripper.move();
 
 
-		ros::Duration(2.0).sleep();
+		ros::Duration(1.0).sleep();
 
 		ROS_INFO("grab bottle");
 		arm.setSupportSurfaceName("table");
@@ -336,12 +336,8 @@ class GrabPourPlace  {
 		//To use the database, add following param to node 'move_group' in file 'move_group.launch' inside package 'tams_ur5_setup_moveit_config'.
 		//    <param name="constraint_approximations_path" value="$(find project16_manipulation)/constraints_approximation_database" />
 		//
-		//If this param is not set, the constraint 's_model_tool0:upright' is not recognized and therefore empty!
-		moveit_msgs::Constraints constraints;
-		constraints.name = "s_model_tool0:upright:5000:high";
 		
-		//validation constraint (used to check if planned trajectory is ok)
-		moveit_msgs::Constraints validation_constraints;
+		//orientation constraints
 		moveit_msgs::OrientationConstraint ocm;
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
@@ -350,11 +346,14 @@ class GrabPourPlace  {
 		ocm.absolute_y_axis_tolerance = 0.6; // but still in workable range. -> Some 'invalid' results are acceptable.
 		ocm.absolute_z_axis_tolerance = M_PI;
 		ocm.weight = 1.0;
-		validation_constraints.name = constraints.name;
-		validation_constraints.orientation_constraints.push_back(ocm);
+
+		moveit_msgs::Constraints constraints;
+		constraints.name = "s_model_tool0:upright:5000:high";
+		constraints.orientation_constraints.push_back(ocm);
+		arm.setPathConstraints(constraints);
 
 		//this planner has better results somehow
-		arm.setPlannerId("LBKPIECEkConfigDefault");
+		//arm.setPlannerId("LBKPIECEkConfigDefault");
 
 		//Z offset for pose
 		pose.position.z += zOffset;
@@ -363,7 +362,6 @@ class GrabPourPlace  {
 		//set target and constraints
 		arm.setPoseReferenceFrame("table_top");
 		arm.setPoseTarget(pose);
-		arm.setPathConstraints(validation_constraints);
 
 		//replace bottle collision object with primitive cylinder
 		std::vector<std::string> ids;
@@ -392,8 +390,12 @@ class GrabPourPlace  {
 		int i = 0;
 		//TODO: Change to finite tests/time (how many/much?)
 		while(!succeeded) {
+			if(i == 15) {
+				plan = *(new moveit::planning_interface::MoveGroup::Plan);
+				break;
+			}
 			arm.plan(plan);
-			succeeded = trajectory_valid(plan.trajectory_, validation_constraints);
+			succeeded = trajectory_valid(plan.trajectory_, constraints);
 			ROS_INFO_STREAM("Planning trajectory attempt " << i++);
 		}
 		arm.clearPathConstraints();
@@ -405,7 +407,7 @@ class GrabPourPlace  {
 		attached_bottle.object = bottle;
 		planning_scene_interface_.applyAttachedCollisionObject(attached_bottle);
 
-		ros::Duration(1.0).sleep();
+		ros::Duration(0.5).sleep();
 		return plan;
 	}
 
@@ -477,7 +479,7 @@ class GrabPourPlace  {
 			//reverse pouring trajectory
 			moveit::planning_interface::MoveGroup::Plan pour_backward;
 			reverse_trajectory(trajectory, pour_backward.trajectory_);
-			ros::Duration(5.0).sleep();
+			ros::Duration(1.0).sleep();
 
 			if(!arm.execute(pour_forward)) {
 				//TODO: handle failure
@@ -508,7 +510,7 @@ class GrabPourPlace  {
 		float radius =  get_bottle_height(bottle.id) - bottle.primitives[0].dimensions[0] / 2 ;
 		float glass_radius = glass.primitives[0].dimensions[1] / 2; //glass radius is half the glass width
 		float glass_height = glass.primitives[0].dimensions[0]; 
-		float glass_offset = 0.04; //vertical distance of bottle tip from glass whenn pouring
+		float glass_offset = 0.0; //vertical distance of bottle tip from glass whenn pouring
 		float zDistance = 0.3 + radius - glass_height / 2 - glass_offset;
 		float startX = start_pose.position.x;
 		float startY = start_pose.position.y;
@@ -516,7 +518,7 @@ class GrabPourPlace  {
 		for(int i = 0; i <= steps; i++) {
 			float angle = pScale * M_PI * i / steps;
 			float tilt_factor = pow((float) i / steps, 2);
-			float translation = dFactor * (sin(angle) * radius +  tilt_factor * glass_radius);
+			float translation = dFactor * (sin(angle) * radius +  tilt_factor * (glass_radius + 0.005));
 			//ROS_INFO_STREAM("computing waypoint for angle " << angle);
 			if(axis == "Y") {
 				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, -dFactor * angle, 0);
@@ -527,7 +529,8 @@ class GrabPourPlace  {
 				target_pose.position.y = startY + translation;
 			}
 			//	target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 1.1 * tilt_factor) * radius;
-			target_pose.position.z = startZ + (cos(M_PI - angle) + 1) * radius - tilt_factor * zDistance;
+			//target_pose.position.z = startZ + (cos(M_PI - angle) + 1) * radius - tilt_factor * zDistance;
+			target_pose.position.z = startZ + (cos(M_PI - angle) + 1) * radius - ((float) i / steps) * zDistance;
 			waypoints.push_back(target_pose);
 		}
 		return waypoints;
@@ -543,7 +546,6 @@ class GrabPourPlace  {
 		despawnObject("bottle");
 		gripper.setNamedTarget("basic_open");
 		gripper.move();
-		ros::Duration(1.0).sleep();
 		arm.setNamedTarget("pour_default");
 		arm.move();
 	}
@@ -578,7 +580,7 @@ class GrabPourPlace  {
 			return false;
 		}
 
-		ros::Duration(1.0).sleep();
+		ros::Duration(0.5).sleep();
 
 		//open gripper
 		gripper.setNamedTarget("basic_open");
@@ -587,7 +589,7 @@ class GrabPourPlace  {
 			return false;
 		}
 
-		ros::Duration(1.0).sleep();
+		ros::Duration(0.5).sleep();
 
 		//release object
 		despawnObject(bottle_id);
@@ -604,7 +606,7 @@ class GrabPourPlace  {
 			bottle = spawnObject(bottle_id);
 		}
 
-		ros::Duration(1.0).sleep();
+		ros::Duration(0.5).sleep();
 
 		//move to retreat position
 		geometry_msgs::Pose post_place_pose = place_pose;
@@ -687,7 +689,7 @@ class GrabPourPlace  {
 		project16_manipulation::PourBottleFeedback feedback;
 		if(USE_BOTTLE_PUBLISHER) {
 			recognizeBottles();
-			ros::Duration(2.0).sleep();
+			ros::Duration(1.0).sleep();
 			if(bottles_.count(bottle_id) == 1) {
 				bottle = bottles_[bottle_id];
 			}
@@ -738,7 +740,7 @@ class GrabPourPlace  {
 					// if SUCCESS, move on to next state, else check number of attempts and either retry state or abort and skip states
 					if ( grab_bottle(bottle.id) ) {
 						ROS_INFO_STREAM("pickBottleUp succeeded with attempt " << CurrentAttempt);
-						ros::Duration(1.0).sleep();
+						ros::Duration(0.5).sleep();
 						state = moveBottleToGlass;
 						CurrentAttempt = 1;
 					} else {
@@ -797,7 +799,7 @@ class GrabPourPlace  {
 						if(execute_plan(move_bottle)) {
 							ROS_INFO_STREAM("moveBottleToGlass succeeded with attempt " << CurrentAttempt);
 							reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_); // for later use in moving the bottle back
-							ros::Duration(1.0).sleep();
+							ros::Duration(0.5).sleep();
 							state = pourIntoGlass;
 							CurrentAttempt = 1;
 							break;
@@ -817,7 +819,7 @@ class GrabPourPlace  {
 					if ( !pour_bottle_in_glass(bottle, glass) ) {
 						failedAtState = pourIntoGlass;
 					} else ROS_INFO_STREAM("pourIntoGlass succeeded");
-					ros::Duration(1.0).sleep();
+					ros::Duration(0.5).sleep();
 					break;
 	 
 
@@ -828,7 +830,7 @@ class GrabPourPlace  {
 						ROS_INFO_STREAM("moveBottleBack succeeded with attempt " << CurrentAttempt);
 						state = placeBottleDown;
 						CurrentAttempt = 1;
-						ros::Duration(1.0).sleep();
+						ros::Duration(0.5).sleep();
 					} else if ( CurrentAttempt++ == NUM_RETRIES_AFTER_JAM ){
 						ROS_INFO_STREAM("XXX STATE 4: moveBottleBack FAILED after all " << CurrentAttempt << " attempts. Moving on to ABORT FOR GOOD.");
 						state = Exit; // just stay still and abort if moving back didn't work because the hand is still holding the bottle..
@@ -843,7 +845,7 @@ class GrabPourPlace  {
 						ROS_INFO_STREAM("placeBottleDown succeeded with attempt " << CurrentAttempt);
 						state = moveArmToDefault;
 						CurrentAttempt = 1;
-						ros::Duration(1.0).sleep();
+						ros::Duration(0.5).sleep();
 					} else if ( CurrentAttempt++ == NUM_RETRIES_AFTER_JAM ) {
 						ROS_INFO_STREAM("XXX STATE 5: placeBottleDown FAILED after all " << CurrentAttempt << " attempts. Moving on to ABORT FOR GOOD.");
 						state = Exit;
@@ -857,7 +859,7 @@ class GrabPourPlace  {
 					ROS_INFO_STREAM("--- STATE 6: moveArmToDefault; Attempt " << CurrentAttempt);
 					if ( move_back() ) {
 						ROS_INFO_STREAM("moveArmToDefault succeeded with attempt " << CurrentAttempt);
-						ros::Duration(3.0).sleep();
+						ros::Duration(1.0).sleep();
 						state = run_cleanup;
 					} else if ( CurrentAttempt++ == NUM_RETRIES_AFTER_JAM ) {
 						ROS_INFO_STREAM("XXX STATE 6: moveArmToDefault FAILED after all " << CurrentAttempt << " attempts. Moving on to cleanup.");
