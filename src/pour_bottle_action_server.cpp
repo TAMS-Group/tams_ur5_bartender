@@ -435,7 +435,7 @@ class GrabPourPlace  {
 		return true;
 	}
 
-	bool pour_bottle_in_glass(moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
+	bool pour_bottle_in_glass(moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass, float portion_size) {
 		ROS_INFO("Pour Bottle");
 
 		moveit_msgs::RobotTrajectory trajectory; //Trajectory
@@ -487,7 +487,7 @@ class GrabPourPlace  {
 			}
 
 			//maybe parameterize pouring time and/or speed
-			sleep(2.0);
+			sleep(std::max((float)0.0, std::min(portion_size, (float)5.0)));
 
 			if(!arm.execute(pour_backward)) {
 				//TODO: handle failure
@@ -684,6 +684,8 @@ class GrabPourPlace  {
 		cleanup();
 
 		std::string bottle_id = goal->bottle_id;
+		float portion_size = goal->portion_size;
+
 		moveit_msgs::CollisionObject bottle;
 
 		project16_manipulation::PourBottleFeedback feedback;
@@ -713,7 +715,7 @@ class GrabPourPlace  {
 		as_->publishFeedback(feedback);
 
 		project16_manipulation::PourBottleResult result;
-		result.success = pouringStateMachine( bottle, glass, glass_pose );
+		result.success = pouringStateMachine( bottle, glass, glass_pose , portion_size);
 
 		if(result.success) {
 			as_->setSucceeded(result,"Grasping, constrained motion and pouring succeeded");
@@ -722,7 +724,7 @@ class GrabPourPlace  {
 		}
 	}
 
-	bool pouringStateMachine( moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass, geometry_msgs::Pose glass_pose ) 
+	bool pouringStateMachine( moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass, geometry_msgs::Pose glass_pose, float portion_size) 
 	{
 		int CurrentAttempt = 1;
 		enum stateSpace { pickBottleUp, moveBottleToGlass, pourIntoGlass, moveBottleBack, placeBottleDown, moveArmToDefault, run_cleanup, Exit, OK };
@@ -816,7 +818,7 @@ class GrabPourPlace  {
 
 				case pourIntoGlass:
 					state = moveBottleBack;
-					if ( !pour_bottle_in_glass(bottle, glass) ) {
+					if ( !pour_bottle_in_glass(bottle, glass, portion_size)){
 						failedAtState = pourIntoGlass;
 					} else ROS_INFO_STREAM("pourIntoGlass succeeded");
 					ros::Duration(0.5).sleep();
