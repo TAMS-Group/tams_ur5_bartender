@@ -575,8 +575,7 @@ class GrabPourPlace  {
 		despawnObject("bottle");
 		gripper.setNamedTarget("basic_open");
 		gripper.move();
-		arm.setNamedTarget("pour_default");
-		arm.move();
+		move_back();
 	}
 
 	bool placeBottle(std::string bottle_id) {
@@ -665,7 +664,7 @@ class GrabPourPlace  {
 	}
 
 	bool move_back() {
-		arm.setNamedTarget("pour_default");
+		arm.setNamedTarget("pour_default_2");
 		return bool(arm.move());
 	}
 
