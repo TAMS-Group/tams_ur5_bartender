@@ -13,6 +13,7 @@
 #include <actionlib/server/simple_action_server.h>
 
 #include <moveit/move_group_interface/move_group.h>
+#include <moveit/robot_state/conversions.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
@@ -328,7 +329,7 @@ class GrabPourPlace  {
 	}
 */
 
-	moveit::planning_interface::MoveGroup::Plan get_move_bottle_plan(std::string bottle_id, geometry_msgs::Pose pose, float zOffset) {
+	moveit::planning_interface::MoveGroup::Plan get_move_bottle_plan(std::string bottle_id, geometry_msgs::Pose pose, moveit_msgs::CollisionObject glass, float zOffset) {
 
 		//bottle up constraint (this constraint has a precomputed configuration space approximation)
 		//look into moveit/moveit_planners/ompl/.../demo_construct_state_database.cpp
@@ -342,18 +343,15 @@ class GrabPourPlace  {
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
 		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = 0.6; //these tolerances are a bit higher than the preset constraint (0.15), 
-		ocm.absolute_y_axis_tolerance = 0.6; // but still in workable range. -> Some 'invalid' results are acceptable.
+		ocm.absolute_x_axis_tolerance = 0.6;
+		ocm.absolute_y_axis_tolerance = 0.6;
 		ocm.absolute_z_axis_tolerance = M_PI;
 		ocm.weight = 1.0;
 
 		moveit_msgs::Constraints constraints;
-		constraints.name = "s_model_tool0:upright:5000:high";
+		constraints.name = "s_model_tool0:upright:15000:high";
 		constraints.orientation_constraints.push_back(ocm);
 		arm.setPathConstraints(constraints);
-
-		//this planner has better results somehow
-		//arm.setPlannerId("LBKPIECEkConfigDefault");
 
 		//Z offset for pose
 		pose.position.z += zOffset;
@@ -361,8 +359,11 @@ class GrabPourPlace  {
 
 		//set target and constraints
 		arm.setPoseReferenceFrame("table_top");
+		//using fixed pouring position to guarantee successfull pouring
+		//arm.setNamedTarget("pour_above_glass_1");
 		arm.setPoseTarget(pose);
 
+		/*
 		//replace bottle collision object with primitive cylinder
 		std::vector<std::string> ids;
 		ids.push_back(bottle_id);
@@ -381,51 +382,62 @@ class GrabPourPlace  {
 		despawnObject(bottle_id);
 		attached_bottle.object = stub_bottle;
 		planning_scene_interface_.applyAttachedCollisionObject(attached_bottle);
+		*/
 
 		ros::Duration(1.0).sleep();
 
 		//start planning
-		moveit::planning_interface::MoveGroup::Plan plan;
+		moveit::planning_interface::MoveGroup::Plan best_plan;
 		bool succeeded = false;
-		int i = 0;
-		//TODO: Change to finite tests/time (how many/much?)
-		while(!succeeded) {
-			if(i == 15) {
-				plan = *(new moveit::planning_interface::MoveGroup::Plan);
-				break;
-			}
+		for(int i = 0; i < 10; i++) {
+			moveit::planning_interface::MoveGroup::Plan plan;
 			arm.plan(plan);
-			succeeded = trajectory_valid(plan.trajectory_, constraints);
-			ROS_INFO_STREAM("Planning trajectory attempt " << i++);
+			if(trajectory_valid(plan.trajectory_, constraints)) {
+				if(!succeeded) {
+					best_plan = plan;
+					succeeded = true;
+				} else if(plan.trajectory_.joint_trajectory.points.size() < best_plan.trajectory_.joint_trajectory.points.size()){
+					best_plan = plan;
+				}
+			}
 		}
-		arm.clearPathConstraints();
-		arm.setPlannerId("RRTConnectkConfigDefault");
+		ROS_INFO_STREAM("Planning move to glass " << (succeeded ? "SUCCEEDED!" : "FAILED!"));
 
+		arm.clearPathConstraints();
+
+		/*
 		//reattach original bottle collision object
 		gripper.detachObject("bottle");
 		despawnObject("bottle");
 		attached_bottle.object = bottle;
 		planning_scene_interface_.applyAttachedCollisionObject(attached_bottle);
+		*/
 
 		ros::Duration(0.5).sleep();
-		return plan;
+		return best_plan;
 	}
 
+
 	/**
-	 * Tests if a given trajectory meets a specific constraint set.
+	 * Tests if a given trajectory meets a specific constraint set and is not empty
 	 */
 	bool trajectory_valid(moveit_msgs::RobotTrajectory trajectory, moveit_msgs::Constraints constraints) {
+		std::vector<trajectory_msgs::JointTrajectoryPoint> points = trajectory.joint_trajectory.points;
+		if(points.empty()) {
+			return false;
+		} else {
 		kinematic_constraints::KinematicConstraintSet kset(arm.getRobotModel());
 		robot_state::Transforms no_transforms(arm.getRobotModel()->getModelFrame());
 		kset.add(constraints, no_transforms);
-		robot_state::RobotState rstate(arm.getRobotModel());
-		std::vector<trajectory_msgs::JointTrajectoryPoint> points = trajectory.joint_trajectory.points;
+		moveit::core::RobotState rstate(arm.getRobotModel());
 		//iterative validation of all waypoints in the given trajectory
 		for(int i = 0; i < points.size(); i++) {
 			//create robot state for waypoint
 			for(int j = 0; j < points[i].positions.size(); j++) {
 				rstate.setJointPositions(trajectory.joint_trajectory.joint_names[j], (double *)&points[i].positions[j]);
-			}
+			}	
+			//problems with this function?
+			//moveit::core::jointTrajPointToRobotState(trajectory.joint_trajectory, (size_t) i, rstate);
 			rstate.update();
 			//return false if robot state does not satisfy constraints
 			if(!kset.decide(rstate).satisfied) {
@@ -433,15 +445,27 @@ class GrabPourPlace  {
 			}
 		}
 		return true;
+		}
 	}
 
-	bool pour_bottle_in_glass(moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass, float portion_size) {
-		ROS_INFO("Pour Bottle");
+	bool can_pour(trajectory_msgs::JointTrajectory joint_trajectory, geometry_msgs::Pose pose, moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
+		moveit::core::RobotState rstate(arm.getRobotModel());
+		moveit::core::jointTrajPointToRobotState(joint_trajectory, (size_t) (joint_trajectory.points.size() - 1), rstate);
+		moveit_msgs::Constraints constraints = arm.getPathConstraints();
+		arm.clearPathConstraints();
+		moveit::planning_interface::MoveGroup::Plan plan = get_pour_bottle_plan(rstate, pose, bottle, glass);
+		arm.setPathConstraints(constraints);
+		return !plan.trajectory_.joint_trajectory.points.empty();
+	}
 
+	moveit::planning_interface::MoveGroup::Plan get_pour_bottle_plan(moveit::core::RobotState state, geometry_msgs::Pose& start_pose, moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
+		moveit_msgs::RobotState start_state;
+		moveit::core::robotStateToRobotStateMsg(state, start_state);
+		arm.setStartState(start_state);
 		moveit_msgs::RobotTrajectory trajectory; //Trajectory
 
 		//Trying around Y-Axis (backwards)
-		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints("Y", false, bottle, glass), 0.03, 3, trajectory);
+		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints("Y", false, bottle, glass, start_pose), 0.03, 3, trajectory);
 		ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
 
 		//Try alternative, if trajectory does not reach 100%
@@ -449,7 +473,7 @@ class GrabPourPlace  {
 			ROS_INFO("Trying next direction!");
 			//Trying around X-Axis to the right
 			moveit_msgs::RobotTrajectory temp_traj; //Alternative Trajectory
-			double next_percentage = arm.computeCartesianPath(compute_pouring_waypoints("X", true, bottle, glass), 0.03, 3, temp_traj);
+			double next_percentage = arm.computeCartesianPath(compute_pouring_waypoints("X", true, bottle, glass, start_pose), 0.03, 3, temp_traj);
 			ROS_INFO("Pouring trajectory (%.2f%% achieved)", next_percentage * 100.0);
 			//If better result, take this one
 			if(next_percentage > success_percentage) {
@@ -460,7 +484,7 @@ class GrabPourPlace  {
 			if(next_percentage < 1.0) {
 				ROS_INFO("Trying next direction!");
 				//Trying around X-Axis to the left
-				next_percentage = arm.computeCartesianPath(compute_pouring_waypoints("X", false, bottle, glass), 0.03, 3, temp_traj);
+				next_percentage = arm.computeCartesianPath(compute_pouring_waypoints("X", false, bottle, glass, start_pose), 0.03, 3, temp_traj);
 				ROS_INFO("Pouring trajectory (%.2f%% achieved)", next_percentage * 100.0); 
 				//If better result, take this one
 				if(next_percentage > success_percentage) {
@@ -469,24 +493,30 @@ class GrabPourPlace  {
 				}
 			}
 		}
-		bool success = success_percentage > 0.95;
+		arm.setStartStateToCurrentState();
+		moveit::planning_interface::MoveGroup::Plan result_plan;
+		if(success_percentage > 0.95) {
+			result_plan.trajectory_ = trajectory;
+		}
+		return result_plan;
+	}
 
+	bool pour_bottle_in_glass(moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass, float portion_size) {
+		ROS_INFO("Pour Bottle");
+		geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
+		moveit::planning_interface::MoveGroup::Plan pour_forward = get_pour_bottle_plan((*arm.getCurrentState()), start_pose, bottle, glass); 
+		bool success = !pour_forward.trajectory_.joint_trajectory.points.empty();
 		if(success) {
-			// Plan pouring trajectory (forward)
-			moveit::planning_interface::MoveGroup::Plan pour_forward;
-			pour_forward.trajectory_ = trajectory;
-
 			//reverse pouring trajectory
 			moveit::planning_interface::MoveGroup::Plan pour_backward;
-			reverse_trajectory(trajectory, pour_backward.trajectory_);
-			ros::Duration(1.0).sleep();
+			reverse_trajectory(pour_forward.trajectory_, pour_backward.trajectory_);
+			ros::Duration(0.5).sleep();
 
 			if(!arm.execute(pour_forward)) {
 				//TODO: handle failure
 				return false;
 			}
 
-			//maybe parameterize pouring time and/or speed
 			sleep(std::max((float)0.0, std::min(portion_size, (float)5.0)));
 
 			if(!arm.execute(pour_backward)) {
@@ -497,9 +527,8 @@ class GrabPourPlace  {
 		return success;
 	}
 
-	std::vector<geometry_msgs::Pose> compute_pouring_waypoints(std::string axis, bool inverse_direction, moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass) {
+	std::vector<geometry_msgs::Pose> compute_pouring_waypoints(std::string axis, bool inverse_direction, moveit_msgs::CollisionObject bottle, moveit_msgs::CollisionObject glass, geometry_msgs::Pose start_pose) {
 		arm.setPoseReferenceFrame("world");
-		geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
 		geometry_msgs::Pose target_pose = start_pose;
 		std::vector<geometry_msgs::Pose> waypoints;
 		waypoints.push_back(start_pose); // first point of trajectory - necessary?
@@ -796,7 +825,7 @@ class GrabPourPlace  {
 
 				case moveBottleToGlass:
 					ROS_INFO_STREAM("--- STATE 2: moveBottleToGlass; (planningTime: " << planningTime << ") ; Attempt " << CurrentAttempt);
-					move_bottle = get_move_bottle_plan(bottle.id, glass_pose, .3);
+					move_bottle = get_move_bottle_plan(bottle.id, glass_pose, glass, .3);
 					if(!move_bottle.trajectory_.joint_trajectory.points.empty()) {
 						if(execute_plan(move_bottle)) {
 							ROS_INFO_STREAM("moveBottleToGlass succeeded with attempt " << CurrentAttempt);
