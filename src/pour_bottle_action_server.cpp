@@ -367,7 +367,7 @@ class GrabPourPlace  {
 		//start planning
 		moveit::planning_interface::MoveGroup::Plan best_plan;
 		bool succeeded = false;
-		for(int i = 0; i < 5; i++) {
+		for(int i = 0; i < 10; i++) {
 			moveit::planning_interface::MoveGroup::Plan plan;
 			arm.plan(plan);
 			if(trajectory_valid(plan.trajectory_, constraints) && can_pour(plan.trajectory_.joint_trajectory, pose, bottles_[bottle_id])) {
@@ -544,7 +544,6 @@ class GrabPourPlace  {
 		despawnObject("bottle");
 		gripper.setNamedTarget("basic_open");
 		gripper.move();
-		move_back();
 	}
 
 	bool placeBottle(std::string bottle_id) {
@@ -683,6 +682,13 @@ class GrabPourPlace  {
 	void execute(const project16_manipulation::PourBottleGoalConstPtr& goal)
 	{
 		ROS_INFO("Running pour bottle!");
+
+		cleanup();
+		glass_ = spawnObject("glass");
+		recognizeBottles();
+		ros::Duration(1.0).sleep();
+		//moving arm to default position after collision objects are spawned
+		move_back();
 
 		cleanup();
 
