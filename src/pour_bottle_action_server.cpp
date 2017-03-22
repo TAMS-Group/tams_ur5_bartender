@@ -370,7 +370,7 @@ class GrabPourPlace  {
 		for(int i = 0; i < 5; i++) {
 			moveit::planning_interface::MoveGroup::Plan plan;
 			arm.plan(plan);
-			if(trajectory_valid(plan.trajectory_, constraints)) {
+			if(trajectory_valid(plan.trajectory_, constraints) && can_pour(plan.trajectory_.joint_trajectory, pose, bottles_[bottle_id])) {
 				if(!succeeded) {
 					best_plan = plan;
 					succeeded = true;
@@ -416,10 +416,11 @@ class GrabPourPlace  {
 	}
 
 	bool can_pour(trajectory_msgs::JointTrajectory joint_trajectory, geometry_msgs::Pose pose, moveit_msgs::CollisionObject bottle) {
-		moveit::core::RobotState rstate(arm.getRobotModel());
-		moveit::core::jointTrajPointToRobotState(joint_trajectory, (size_t) (joint_trajectory.points.size() - 1), rstate);
 		moveit_msgs::Constraints constraints = arm.getPathConstraints();
 		arm.clearPathConstraints();
+		moveit::core::RobotState rstate(arm.getRobotModel());
+		moveit::core::jointTrajPointToRobotState(joint_trajectory, (size_t) (joint_trajectory.points.size() - 1), rstate);
+		arm.setPoseReferenceFrame("table_top");
 		moveit::planning_interface::MoveGroup::Plan plan = get_pour_bottle_plan(rstate, pose, bottle);
 		arm.setPathConstraints(constraints);
 		return !plan.trajectory_.joint_trajectory.points.empty();
@@ -470,6 +471,7 @@ class GrabPourPlace  {
 
 	bool pour_bottle_in_glass(moveit_msgs::CollisionObject bottle, float portion_size) {
 		ROS_INFO("Pour Bottle");
+		arm.setPoseReferenceFrame("world");
 		geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
 		moveit::planning_interface::MoveGroup::Plan pour_forward = get_pour_bottle_plan((*arm.getCurrentState()), start_pose, bottle); 
 		bool success = !pour_forward.trajectory_.joint_trajectory.points.empty();
@@ -495,7 +497,7 @@ class GrabPourPlace  {
 	}
 
 	std::vector<geometry_msgs::Pose> compute_pouring_waypoints(std::string axis, bool inverse_direction, moveit_msgs::CollisionObject bottle, geometry_msgs::Pose start_pose) {
-		arm.setPoseReferenceFrame("world");
+		//arm.setPoseReferenceFrame("world");
 		geometry_msgs::Pose target_pose = start_pose;
 		std::vector<geometry_msgs::Pose> waypoints;
 		waypoints.push_back(start_pose); // first point of trajectory - necessary?
