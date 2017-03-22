@@ -90,6 +90,13 @@ public:
         }
     }
 
+    //Publish Feedback (to GUI)
+
+    void publishFeedback(std::string msg) {
+        feedback_.task_state = msg;
+        as_->publishFeedback(feedback_);
+    }
+
     //Save bottles to internal Bottle DB
 
     void objectsCallback(const pr2016_msgs::BarCollisionObjectArrayConstPtr & msg) {
@@ -114,9 +121,8 @@ public:
         bool success = false;
 
         //feedback received order
-        feedback_.task_state = "Received order for cocktail " + goal->cocktail;
         ROS_INFO_STREAM("Received order for cocktail " << goal->cocktail);
-        as_->publishFeedback(feedback_);
+        publishFeedback("Received order for cocktail " + goal->cocktail);
 
         //find cocktail in db
         for (int i = 0; i < cocktails_db_.size(); i++) {
@@ -128,8 +134,7 @@ public:
         //abort if cocktail not available
         if (ordered_cocktail.getName() == "") {
             ROS_ERROR_STREAM("Cocktail '" << goal->cocktail << "' not found");
-            feedback_.task_state = "Cocktail '" + goal->cocktail + "' not found";
-            as_->publishFeedback(feedback_);
+            publishFeedback("Cocktail '" + goal->cocktail + "' not found");
             as_->setAborted();
             return;
         }
@@ -138,10 +143,8 @@ public:
         actionlib::SimpleActionClient<project16_manipulation::PourBottleAction> ac("pour_bottle", true);
         ac.waitForServer();
 
-        //send feedback
-        feedback_.task_state = "Start mixing " + ordered_cocktail.getName();
         ROS_INFO_STREAM("Start mixing " << ordered_cocktail.getName());
-        as_->publishFeedback(feedback_);
+        publishFeedback("Start mixing " + ordered_cocktail.getName());
 
         std::map<std::string, double> ingr = ordered_cocktail.getIngredients();
         std::map<std::string, double>::iterator it;
@@ -160,8 +163,7 @@ public:
             goal.portion_size = double(it->second);
 
             ROS_INFO_STREAM("Mixing " << goal.portion_size << " cl " << goal.bottle_id);
-            //feedback_.task_state = "Mixing " + goal.portion_size + " cl " + goal.bottle_id;
-            //as_->publishFeedback(feedback_);
+
             //send mixing goal of actual ingredient
             ac.sendGoal(goal,
                     boost::bind(&DrinkChooser::doneCB, this, _1, _2),
@@ -173,14 +175,13 @@ public:
 
         //set status regarding the result
         if (success_) {
-            feedback_.task_state = "Finished mixing " + ordered_cocktail.getName();
+            publishFeedback("Finished mixing " + ordered_cocktail.getName());
             ROS_INFO_STREAM("Finished mixing " << ordered_cocktail.getName());
         } else {
-            feedback_.task_state = "Failed mixing " + ordered_cocktail.getName();
+            publishFeedback("Failed mixing " + ordered_cocktail.getName());
             ROS_INFO_STREAM("Failed mixing " << ordered_cocktail.getName());
         }
         //publish feedback if finished
-        as_->publishFeedback(feedback_);
         result_.success = success_;
         as_->setSucceeded(result_);
     }
@@ -201,8 +202,7 @@ public:
         ss << max_ingr_;
         std::string step = ss.str();
         ROS_INFO_STREAM("" << step << " " << feed->task_state);
-        feedback_.task_state = "" + step + " " + feed->task_state;
-        as_->publishFeedback(feedback_);
+        publishFeedback("" + step + " " + feed->task_state);
     }
 
     //generate available cocktail list
