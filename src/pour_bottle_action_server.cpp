@@ -33,7 +33,6 @@ bool OBJECTS_RECOGNIZED = true;
 const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
 
 
-
 const int NUM_RETRIES_AFTER_JAM = 5;
 const tf::TransformListener* listener = NULL;
 const int planningTime = 30;
@@ -58,6 +57,8 @@ class GrabPourPlace  {
 
 	std::map<std::string, moveit_msgs::CollisionObject> bottles_;
 	moveit_msgs::CollisionObject glass_;
+        
+        std::stringstream sstm;
 
 	public:
 	std::map<std::string, ObjectDescription> object_map;
@@ -679,11 +680,12 @@ class GrabPourPlace  {
 		return pose;
 	}
 
-        void publishCurrentFeedback(std::string msg)
+        void publishCurrentFeedback(std::stringstream &stream)
         {		
             project16_manipulation::PourBottleFeedback feedback;
-            feedback.task_state = msg;
+            feedback.task_state = stream.str();
             as_->publishFeedback(feedback);
+            stream.str("");
         }
         
 	void execute(const project16_manipulation::PourBottleGoalConstPtr& goal)
@@ -711,7 +713,8 @@ class GrabPourPlace  {
 				bottle = bottles_[bottle_id];
 			}
 			else {
-                            //publishCurrentFeedback(fastformat::write("Bottle " , bottle.id , " does not exist!"));
+                            publishCurrentFeedback((std::stringstream&) (sstm << "Bottle " << bottle.id << " does not exist!"));
+                            ROS_INFO_STREAM("Bottle " << bottle.id << " does not exist!");
                             as_->setAborted();
                             return;
 			}
@@ -748,18 +751,18 @@ class GrabPourPlace  {
 
 				case pickBottleUp:
 					ROS_INFO_STREAM("--- STATE 1: pickBottleUp; Attempt " << CurrentAttempt);
-                                        //publishCurrentFeedback("Picking up bottle: Attempt " << CurrentAttempt);
+                                        publishCurrentFeedback((std::stringstream&) (sstm << "Picking up bottle: Attempt " << CurrentAttempt));
 					// if SUCCESS, move on to next state, else check number of attempts and either retry state or abort and skip states
 					if ( grab_bottle(bottle.id) ) {
 						ROS_INFO_STREAM("pickBottleUp succeeded with attempt " << CurrentAttempt);
-                                                //publishCurrentFeedback("Picking up bottle succeeded with attempt " << CurrentAttempt);
+                                                publishCurrentFeedback((std::stringstream&) (sstm << "Picking up bottle succeeded with attempt " << CurrentAttempt));
 						ros::Duration(0.5).sleep();
 						state = moveBottleToGlass;
 						CurrentAttempt = 1;
 					} else {
 						if ( CurrentAttempt++ == NUM_RETRIES_AFTER_JAM+1 ) {
 							ROS_INFO_STREAM("XXX STATE 1: pickBottleUp FAILED after all " << CurrentAttempt << " attempts. Moving on to cleanup.");
-                                                        //publishCurrentFeedback("Picking up bottle FAILED after " << CurrentAttempt << ". attempt.");
+                                                        publishCurrentFeedback((std::stringstream&) (sstm << "Picking up bottle FAILED after " << CurrentAttempt << ". attempt."));
 							state = run_cleanup;
 							failedAtState = pickBottleUp;
 						}
@@ -773,7 +776,7 @@ class GrabPourPlace  {
 					if(!move_bottle.trajectory_.joint_trajectory.points.empty()) {
 						if(execute_plan(move_bottle)) {
 							ROS_INFO_STREAM("moveBottleToGlass succeeded with attempt " << CurrentAttempt);
-                                                        //publishCurrentFeedback("Moving bottle to glass succeeded with attempt " << CurrentAttempt);
+                                                        publishCurrentFeedback((std::stringstream&) (sstm << "Moving bottle to glass succeeded with attempt " << CurrentAttempt));
 							reverse_trajectory(move_bottle.trajectory_, move_bottle_back.trajectory_); // for later use in moving the bottle back
 							ros::Duration(0.5).sleep();
 							state = pourIntoGlass;
@@ -786,7 +789,7 @@ class GrabPourPlace  {
 					// when plan was found & executed, this isn't reached, else check number of attempts and either retry state or abort and skip states
 					if (CurrentAttempt++ == NUM_RETRIES_AFTER_JAM) {
 						ROS_INFO_STREAM("XXX STATE 2: moveBottleToGlass FAILED after all " << CurrentAttempt << " attempts. Moving on to placeBottleDown.");
-                                                //publishCurrentFeedback("Moving bottle to glass FAILED after " << CurrentAttempt << ". attempt. Placing bottle back down!");
+                                                publishCurrentFeedback((std::stringstream&) (sstm << "Moving bottle to glass FAILED after " << CurrentAttempt << ". attempt. Placing bottle back down!"));
 						state = placeBottleDown;
 						failedAtState = moveBottleToGlass;
 						CurrentAttempt = 1;
@@ -799,7 +802,7 @@ class GrabPourPlace  {
 						failedAtState = pourIntoGlass;
 					} else {
                                             ROS_INFO_STREAM("pourIntoGlass succeeded");
-                                            //publishCurrentFeedback("Pouring succeeded!");
+                                            publishCurrentFeedback((std::stringstream&) (sstm << "Pouring succeeded!"));
                                         }
 					ros::Duration(0.5).sleep();
 					break;
@@ -807,17 +810,17 @@ class GrabPourPlace  {
 
 				case moveBottleBack:
 					ROS_INFO_STREAM("--- STATE 4: moveBottleBack; Attempt " << CurrentAttempt);
-                                        //publishCurrentFeedback("Moving bottle back, attempt: " << CurrentAttempt);
+                                        publishCurrentFeedback((std::stringstream&) (sstm << "Moving bottle back, attempt: " << CurrentAttempt));
 					// if SUCCESS, move on to next state, else check number of attempts and either retry state or abort and skip states
 					if ( execute_plan(move_bottle_back) ) {
 						ROS_INFO_STREAM("moveBottleBack succeeded with attempt " << CurrentAttempt);
-                                                //publishCurrentFeedback("Moving bottle back succeeded with attempt: " << CurrentAttempt);
+                                                publishCurrentFeedback((std::stringstream&) (sstm << "Moving bottle back succeeded with attempt: " << CurrentAttempt));
 						state = placeBottleDown;
 						CurrentAttempt = 1;
 						ros::Duration(0.5).sleep();
 					} else if ( CurrentAttempt++ == NUM_RETRIES_AFTER_JAM ){
 						ROS_INFO_STREAM("XXX STATE 4: moveBottleBack FAILED after all " << CurrentAttempt << " attempts. Moving on to ABORT FOR GOOD.");
-                                                //publishCurrentFeedback("Moving bottle back failed after " << CurrentAttempt << ". attempt.");
+                                                publishCurrentFeedback((std::stringstream&) (sstm << "Moving bottle back failed after " << CurrentAttempt << ". attempt."));
 						state = Exit; // just stay still and abort if moving back didn't work because the hand is still holding the bottle..
 						failedAtState = moveBottleBack;
 					}
@@ -826,16 +829,16 @@ class GrabPourPlace  {
 
 				case placeBottleDown:
 					ROS_INFO_STREAM("--- STATE 5: placeBottleDown; Attempt " << CurrentAttempt);
-                                        //publishCurrentFeedback("Placing bottle down, attempt: " << CurrentAttempt);
+                                        publishCurrentFeedback((std::stringstream&) (sstm << "Placing bottle down, attempt: " << CurrentAttempt));
 					if ( placeBottle(bottle.id) ) {
 						ROS_INFO_STREAM("placeBottleDown succeeded with attempt " << CurrentAttempt);
-                                                //publishCurrentFeedback("Placing bottle down succeeded with attempt: " << CurrentAttempt);
+                                                publishCurrentFeedback((std::stringstream&) (sstm << "Placing bottle down succeeded with attempt: " << CurrentAttempt));
 						state = moveArmToDefault;
 						CurrentAttempt = 1;
 						ros::Duration(0.5).sleep();
 					} else if ( CurrentAttempt++ == NUM_RETRIES_AFTER_JAM ) {
 						ROS_INFO_STREAM("XXX STATE 5: placeBottleDown FAILED after all " << CurrentAttempt << " attempts. Moving on to ABORT FOR GOOD.");
-						//publishCurrentFeedback("Placing bottle down failed after " << CurrentAttempt << ". attempt.");
+						publishCurrentFeedback((std::stringstream&) (sstm << "Placing bottle down failed after " << CurrentAttempt << ". attempt."));
                                                 state = Exit;
 						failedAtState = placeBottleDown;
 					}
@@ -845,15 +848,15 @@ class GrabPourPlace  {
 				case moveArmToDefault:
 					CurrentAttempt = 1;
 					ROS_INFO_STREAM("--- STATE 6: moveArmToDefault; Attempt " << CurrentAttempt);
-                                        //publishCurrentFeedback("Moving arm to default pose, attempt: " << CurrentAttempt);
+                                        publishCurrentFeedback((std::stringstream&) (sstm << "Moving arm to default pose, attempt: " << CurrentAttempt));
 					if ( move_back() ) {
 						ROS_INFO_STREAM("moveArmToDefault succeeded with attempt " << CurrentAttempt);
-                                                //publishCurrentFeedback("Moving arm to default pose succeeded with attempt: " << CurrentAttempt);
+                                                publishCurrentFeedback((std::stringstream&) (sstm << "Moving arm to default pose succeeded with attempt: " << CurrentAttempt));
 						ros::Duration(1.0).sleep();
 						state = run_cleanup;
 					} else if ( CurrentAttempt++ == NUM_RETRIES_AFTER_JAM ) {
 						ROS_INFO_STREAM("XXX STATE 6: moveArmToDefault FAILED after all " << CurrentAttempt << " attempts. Moving on to cleanup.");
-                                                //publishCurrentFeedback("Moving arm to default pose failed after " << CurrentAttempt << ". attempt.");
+                                                publishCurrentFeedback((std::stringstream&) (sstm << "Moving arm to default pose failed after " << CurrentAttempt << ". attempt."));
 						state = run_cleanup;
 						failedAtState = moveArmToDefault;
 					}
@@ -862,7 +865,7 @@ class GrabPourPlace  {
 
 				case run_cleanup:
 					ROS_INFO_STREAM("--- STATE 7: run_cleanup: despawn objects and move arm to home (if not already happened)");
-                                        //publishCurrentFeedback("Cleaning up (despawning objects, etc.)");
+                                        publishCurrentFeedback((std::stringstream&) (sstm << "Cleaning up (despawning objects, etc.)"));
 					cleanup();
 					// result.success = failedAtState == OK;
 					state = Exit;
