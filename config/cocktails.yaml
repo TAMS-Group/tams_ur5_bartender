@@ -10,11 +10,20 @@ cocktails:
             type: 'tequila'
             amount: 3.0
 - cocktail:
+    name: 'TAMS libre special'
+    ingredients:
+        - ingr:
+            type: 'dark rum'
+            amount: 3.0
+        - ingr:
+            type: 'tequila'
+            amount: 3.0
+- cocktail:
     name: 'Cola'
     ingredients:
         - ingr:
             type: 'cola'
-            amount: 15.0
+            amount: 20.0
 - cocktail:
     name: 'alexander'
     ingredients:
@@ -487,8 +496,8 @@ cocktails:
     name: 'cuba libre'
     ingredients:
         - ingr:
-            type: 'bacardi'
-            amount: 5.0
+            type: 'dark rum'
+            amount: 2.0
         - ingr:
             type: 'cola'
             amount: 12.0
@@ -803,10 +812,10 @@ cocktails:
     ingredients:
         - ingr:
             type: 'tequila'
-            amount: 4.5
+            amount: 1.0
         - ingr:
             type: 'orange juice'
-            amount: 9.0
+            amount: 12.0
         - ingr:
             type: 'grenadine'
             amount: 1.5
