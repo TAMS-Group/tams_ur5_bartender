@@ -19,6 +19,15 @@ cocktails:
             type: 'tequila'
             amount: 3.0
 - cocktail:
+    name: 'kiba'
+    ingredients:
+        - ingr:
+            type: 'banana juice'
+            amount: 10.0
+        - ingr:
+            type: 'Cherry Juice'
+            amount: 10.0
+- cocktail:
     name: 'Cola'
     ingredients:
         - ingr:

@@ -1,8 +1,14 @@
 TAMS libre
     3.0 cl bacardi
     3.0 cl tequila
+TAMS libre special
+    3.0 cl dark rum
+    3.0 cl tequila
+kiba
+    10.0 cl banana juice
+    10.0 cl Cherry Juice
 Cola
-    15.0 cl cola
+    20.0 cl cola
 alexander
     3.0 cl cognac
     3.0 cl creme de cacao (brown)
@@ -160,7 +166,7 @@ cosmopolitan
     3.0 cl cranberry juice
     1.5 cl lime juice
 cuba libre
-    5.0 cl bacardi
+    2.0 cl dark rum
     12.0 cl cola
     1.0 cl lime juice
 french 75
@@ -265,8 +271,8 @@ singapore sling
     1.5 cl lime juice
     0.1 cl angostura bitters
 tequila sunrise
-    4.5 cl tequila
-    9.0 cl orange juice
+    1.0 cl tequila
+    12.0 cl orange juice
     1.5 cl grenadine
 b52
     2.0 cl triple sec
