@@ -159,7 +159,7 @@ class GrabPourPlace  {
 		gripper.setNamedTarget("basic_open");
 		gripper.move();
 
-		ros::Duration(1.0).sleep();
+		ros::Duration(0.5).sleep();
 
 		ROS_INFO("grab bottle");
 		arm.setSupportSurfaceName("table");
@@ -486,8 +486,10 @@ class GrabPourPlace  {
 				//TODO: handle failure
 				return false;
 			}
+			double amount = std::max(0.0, std::min(0.6 * (portion_size - 1.5), 20.0));
+			ROS_INFO_STREAM("Pouring " << portion_size << "cl");
 
-			sleep(std::max((float)0.0, std::min(portion_size, (float)5.0)));
+			ros::Duration(amount).sleep();
 
 			if(!arm.execute(pour_backward)) {
 				//TODO: handle failure
@@ -517,14 +519,16 @@ class GrabPourPlace  {
 		for(int i = 0; i <= steps; i++) {
 			float angle = pScale * M_PI * i / steps;
 			float tilt_factor = pow((float) i / steps, 2);
-			float translation = dFactor * (sin(angle) * radius +  tilt_factor * (glass_radius + 0.005));
+
 			//ROS_INFO_STREAM("computing waypoint for angle " << angle);
 			if(axis == "Y") {
 				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, -dFactor * angle, 0);
+				float translation = dFactor * (sin(angle) * radius + tilt_factor * (glass_radius - 0.005 - 0.015));
 				target_pose.position.x = startX + translation;
 
 			} else { //X Axis
 				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI + dFactor * angle, 0, 0);
+				float translation = dFactor * (sin(angle) * radius + tilt_factor * (glass_radius - 0.005));
 				target_pose.position.y = startY + translation;
 			}
 			//	target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 1.1 * tilt_factor) * radius;
