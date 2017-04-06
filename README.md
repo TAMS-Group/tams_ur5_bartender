@@ -58,8 +58,10 @@ git submodule foreach git pull origin master
    * [```tams_ur5_setup```](https://github.com/TAMS-Group/tams_ur5_setup.git) with branch 'project2016'
    * [```tams_ur5```](https://github.com/TAMS-Group/tams_ur5.git)
 * ```project16_image_processing```
-   * opencv?
-   * kinect bla?
+   * [```OpenCV```](http://opencv.org/)
+   * [```Kinect driver```](http://wiki.ros.org/freenect_launch)
+   * [```apriltags_ros```](http://wiki.ros.org/apriltags_ros)
+   * [```Camera Positioner```](https://github.com/TAMS-Group/camera_positioner)
 * ```project16_gui```
 	* [```rosbridge_suite```](http://wiki.ros.org/rosbridge_suite)
 
