@@ -1,3 +1,5 @@
+#define USE_MATH_DEFINES
+
 #include <iostream>
 #include <algorithm>
 #include <stdio.h>
@@ -6,7 +8,7 @@
 #include <ros/ros.h>
 
 #include <moveit/move_group_interface/move_group.h>
-
+#include <moveit/robot_state/conversions.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
@@ -15,6 +17,8 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 
 #include <math.h>
+
+moveit_msgs::CollisionObject glass_;
 
 class PourBottleTest{
 	struct objectDescription {
@@ -33,7 +37,7 @@ class PourBottleTest{
 
 		PourBottleTest()
 		{
-			objectDescription glass = {{0, 0.03, 0.12}, {0.1, 0.1, 0.05}};
+			objectDescription glass = {{0, 0.03, 0.08}, {-0.2, 0.35, 0.04}};
 			object_map["glass"] = glass;
 			
 			objectDescription bottle = {{0, 0.04, 0.3}, {.01, 0, 0}};// {-0.1, -0.1, 0}};
@@ -90,11 +94,104 @@ class PourBottleTest{
         return object;
     }
 
+	float get_bottle_height(moveit_msgs::CollisionObject bottle) {
+		float height = 0.0;
+		for(int i = 0; i < bottle.primitives.size(); i++) {
+			height += bottle.primitives[i].dimensions[0];
+		}
+		return height;
+	}
+
+	std::vector<geometry_msgs::Pose> compute_pouring_waypoints(std::string axis, bool inverse_direction, moveit_msgs::CollisionObject bottle, geometry_msgs::Pose start_pose) {
+		//arm.setPoseReferenceFrame("world");
+		geometry_msgs::Pose target_pose = start_pose;
+		std::vector<geometry_msgs::Pose> waypoints;
+		waypoints.push_back(start_pose); // first point of trajectory - necessary?
+		//pouring is described in a circular motion
+		int dFactor = inverse_direction ? 1 : -1;
+		int steps = 10; //number of waypoints
+		float pScale = 0.65; //max pouring angle in percent (100% is M_PI)
+		float radius =  get_bottle_height(bottle) - bottle.primitives[0].dimensions[0] / 2 ;
+		float glass_radius = glass_.primitives[0].dimensions[1] / 2; //glass radius is half the glass width
+		float glass_height = glass_.primitives[0].dimensions[0];
+		float glass_offset = 0.0; //vertical distance of bottle tip from glass whenn pouring
+		float zDistance = 0.3 + radius - glass_height / 2 - glass_offset;
+		float startX = start_pose.position.x;
+		float startY = start_pose.position.y;
+		float startZ = start_pose.position.z;
+		for(int i = 0; i <= steps; i++) {
+			float angle = pScale * M_PI * i / steps;
+			float tilt_factor = pow((float) i / steps, 2);
+			float translation = dFactor * (sin(angle) * radius +  tilt_factor * (glass_radius + 0.005));
+			//ROS_INFO_STREAM("computing waypoint for angle " << angle);
+			if(axis == "Y") {
+				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, -dFactor * angle, 0);
+				target_pose.position.x = startX + translation;
+
+			} else { //X Axis
+				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI + dFactor * angle, 0, 0);
+				target_pose.position.y = startY + translation;
+			}
+			//	target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 1.1 * tilt_factor) * radius;
+			//target_pose.position.z = startZ + (cos(M_PI - angle) + 1) * radius - tilt_factor * zDistance;
+			target_pose.position.z = startZ + (cos(M_PI - angle) + 1) * radius - ((float) i / steps) * zDistance;
+			waypoints.push_back(target_pose);
+		}
+		return waypoints;
+	}
+
+	moveit::planning_interface::MoveGroup::Plan get_pour_bottle_plan(moveit::planning_interface::MoveGroup& arm, moveit::core::RobotState state, geometry_msgs::Pose& start_pose, moveit_msgs::CollisionObject bottle) {
+		moveit_msgs::RobotState start_state;
+		moveit::core::robotStateToRobotStateMsg(state, start_state);
+		arm.setStartState(start_state);
+		moveit_msgs::RobotTrajectory trajectory; //Trajectory
+
+		//Trying around Y-Axis (backwards)
+		double success_percentage = arm.computeCartesianPath(compute_pouring_waypoints("Y", false, bottle, start_pose), 0.03, 3, trajectory);
+		ROS_INFO("Pouring trajectory (%.2f%% achieved)", success_percentage * 100.0);
+
+		//Try alternative, if trajectory does not reach 100%
+		if(success_percentage < 0.95) {
+			ROS_INFO("Trying next direction!");
+			//Trying around X-Axis to the right
+			moveit_msgs::RobotTrajectory temp_traj; //Alternative Trajectory
+			double next_percentage = arm.computeCartesianPath(compute_pouring_waypoints("X", true, bottle, start_pose), 0.03, 3, temp_traj);
+			ROS_INFO("Pouring trajectory (%.2f%% achieved)", next_percentage * 100.0);
+			//If better result, take this one
+			if(next_percentage > success_percentage) {
+				success_percentage = next_percentage;
+				trajectory = temp_traj;
+			}
+			//Try next, if trajectory does not reach 100%
+			if(next_percentage < 0.95) {
+				ROS_INFO("Trying next direction!");
+				//Trying around X-Axis to the left
+				next_percentage = arm.computeCartesianPath(compute_pouring_waypoints("X", false, bottle, start_pose), 0.03, 3, temp_traj);
+				ROS_INFO("Pouring trajectory (%.2f%% achieved)", next_percentage * 100.0); 
+				//If better result, take this one
+				if(next_percentage > success_percentage) {
+					success_percentage = next_percentage;
+					trajectory = temp_traj;
+				}
+			}
+		}
+		arm.setStartStateToCurrentState();
+		moveit::planning_interface::MoveGroup::Plan result_plan;
+		if(success_percentage > 0.95) {
+			result_plan.trajectory_ = trajectory;
+		}
+		return result_plan;
+	}
+
+
 void executePouring() {
 }
 
 
 };
+
+
+
 
 int main(int argc, char** argv){
 	ros::init(argc, argv, "PaPTest");
@@ -116,17 +213,16 @@ int main(int argc, char** argv){
 	PourBottleTest testClass;
 
 	ROS_INFO("Spawning glass and bottle");
-	moveit_msgs::CollisionObject glass = testClass.spawnObject("glass", "table_top");
+	glass_ = testClass.spawnObject("glass", "table_top");
 
 	std::string endeffectorLink = arm.getEndEffectorLink().c_str();
 
 	// waypoints for pouring motion
-	std::vector<geometry_msgs::Pose> waypoints;
 	geometry_msgs::Pose glass_pose;
-	glass_pose.orientation.w = 1.0;
-	glass_pose.position.x = 0.1;
-	glass_pose.position.y = 0.1;
-	glass_pose.position.z = 0.3;
+	glass_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+	glass_pose.position.x = -0.21;
+	glass_pose.position.y = 0.35;
+	glass_pose.position.z = 0.33;
 
 	arm.setPoseReferenceFrame("table_top");
 	// shoulder constraint so that the arm is 'elbow up'
@@ -143,12 +239,14 @@ int main(int argc, char** argv){
 	arm.setPoseTarget(glass_pose);
 	arm.move();
 	//arm.clearPathConstraints();
-	testClass.spawnObject("bottle", endeffectorLink);
+	moveit_msgs::CollisionObject bottle = testClass.spawnObject("bottle", endeffectorLink);
 	gripper.attachObject("bottle", endeffectorLink);
 	sleep(2);
 
 	arm.setPoseReferenceFrame("world");
 	geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
+
+	/*
 
 	geometry_msgs::Pose target_pose = start_pose;
 
@@ -169,28 +267,22 @@ int main(int argc, char** argv){
 		target_pose.position.z = startZ + (cos(M_PI - angle) + 1 - 2 * 0.7 * pow((float) i / steps, 2) ) * radius;
 		waypoints.push_back(target_pose);
 	}
-	
-	moveit::planning_interface::MoveGroup::Plan pour_forward;
+	*/
+
+	moveit::planning_interface::MoveGroup::Plan pour_forward = testClass.get_pour_bottle_plan(arm, (*arm.getCurrentState()), start_pose, bottle); 
 	moveit::planning_interface::MoveGroup::Plan pour_backward;
-
-	moveit_msgs::RobotTrajectory trajectory;
-	moveit_msgs::RobotTrajectory trajectory_back;
-
-	// Pour forward trajectory
-	double fraction = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory);
-	pour_forward.trajectory_ = trajectory;
-	ROS_INFO("Pouring trajectory (%.2f%% acheived)", fraction * 100.0);
 
 	//reverse trajectory points
 	robot_trajectory::RobotTrajectory rTrajectory(arm.getRobotModel(),"arm");
 
-	rTrajectory.setRobotTrajectoryMsg((*arm.getCurrentState()), trajectory);
+	rTrajectory.setRobotTrajectoryMsg((*arm.getCurrentState()), pour_forward.trajectory_);
 	rTrajectory.reverse();
 
 	//std::reverse(trajectory.joint_trajectory.points.begin(), trajectory.joint_trajectory.points.end());
 	//std::reverse(trajectory.multi_dof_joint_trajectory.points.begin(), trajectory.multi_dof_joint_trajectory.points.end());
 	//moveit::trajectory_processing::IterativeParabolicTimeParameterization::computeTimeStamps(rTrajectory);
 	rTrajectory.getRobotTrajectoryMsg(pour_backward.trajectory_);
+
 	while(ros::ok()) {
 		arm.execute(pour_forward);
 
