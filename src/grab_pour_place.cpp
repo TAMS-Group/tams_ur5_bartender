@@ -51,7 +51,8 @@ class GrabPourPlace  {
 		planning_scene_diff_client.waitForExistence();
 
 		//arm.setPlannerId("RRTConnectkConfigDefault");
-		arm.setPlannerId("LBKPIECEkConfigDefault");
+		//arm.setPlannerId("LBKPIECEkConfigDefault");
+		arm.setPlannerId("BKPIECEkConfigDefault");
 
 		arm.setPlanningTime(20.0);
 		mvt.reset(new moveit_visual_tools::MoveItVisualTools("world","/moveit_visual_markers", arm.getRobotModel()));
@@ -298,20 +299,8 @@ class GrabPourPlace  {
 	       	arm.plan(plan);
 		arm.clearPathConstraints();
 
-		//orientation constraint
-		moveit_msgs::Constraints validation_constraints;
-		moveit_msgs::OrientationConstraint ocm;
-		ocm.link_name = "s_model_tool0";
-		ocm.header.frame_id = "table_top";
-		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = 0.15;
-		ocm.absolute_y_axis_tolerance = 0.15;
-		ocm.absolute_z_axis_tolerance = M_PI;
-		ocm.weight = 1.0;
-		validation_constraints.orientation_constraints.push_back(ocm);
-
 		//check validity of trajectory
-		bool is_valid = trajectory_valid(plan.trajectory_, validation_constraints);
+		bool is_valid = trajectory_valid(plan.trajectory_, constraints);
 		if(is_valid) {
 			ROS_INFO_STREAM("Trajectory is valid! Visualizing trajectory.");
 			//visualize trajectory in rviz
@@ -387,7 +376,16 @@ int main(int argc, char** argv) {
 
 	//constraints with name as specified in the approximation graph database
 	moveit_msgs::Constraints constraints;
-	constraints.name = "s_model_tool0:upright";
+	moveit_msgs::OrientationConstraint ocm;
+	ocm.link_name = "s_model_tool0";
+	ocm.header.frame_id = "table_top";
+	ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+	ocm.absolute_x_axis_tolerance = 0.6;
+	ocm.absolute_y_axis_tolerance = 0.6;
+	ocm.absolute_z_axis_tolerance = M_PI;
+	ocm.weight = 1.0;
+	constraints.orientation_constraints.push_back(ocm);
+	constraints.name = "s_model_tool0:upright:15000:high";
 
 	while(ros::ok()) {
 		task_planner.plan_with_constraints(constraints);
