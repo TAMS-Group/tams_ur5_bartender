@@ -351,7 +351,7 @@ class GrabPourPlace  {
 		ocm.weight = 1.0;
 
 		moveit_msgs::Constraints constraints;
-		constraints.name = "s_model_tool0:upright:15000:high";
+		constraints.name = "s_model_tool0:upright:5000:high:tilted_base";
 		constraints.orientation_constraints.push_back(ocm);
 		arm.setPathConstraints(constraints);
 
@@ -371,7 +371,7 @@ class GrabPourPlace  {
 		for(int i = 0; i < 10; i++) {
 			moveit::planning_interface::MoveGroup::Plan plan;
 			arm.plan(plan);
-			if(trajectory_valid(plan.trajectory_, constraints) && can_pour(plan.trajectory_.joint_trajectory, pose, bottles_[bottle_id])) {
+			if(!plan.trajectory_.joint_trajectory.points.empty() && can_pour(plan.trajectory_.joint_trajectory, pose, bottles_[bottle_id])) {
 				if(!succeeded) {
 					best_plan = plan;
 					succeeded = true;
@@ -633,7 +633,7 @@ class GrabPourPlace  {
 	}
 
 	bool move_back() {
-		arm.setNamedTarget("pour_default_2");
+		arm.setNamedTarget("pour_default");
 		return bool(arm.move());
 	}
 

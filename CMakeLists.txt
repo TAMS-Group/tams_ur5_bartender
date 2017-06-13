@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 	moveit_ros_planning_interface
 	moveit_visual_tools
+	moveit_planners_ompl
 	moveit_core
 	tf
 )
@@ -45,6 +46,9 @@ target_link_libraries(con_motion_test ${catkin_LIBRARIES})
 
 add_executable(grab_pour_place src/grab_pour_place.cpp)
 target_link_libraries(grab_pour_place ${catkin_LIBRARIES})
+
+add_executable(construct_constraint_database src/construct_constraint_database.cpp)
+target_link_libraries(construct_constraint_database ${catkin_LIBRARIES})
 
 add_executable(pour_bottle_action_server src/pour_bottle_action_server.cpp)
 target_link_libraries(pour_bottle_action_server ${catkin_LIBRARIES})
