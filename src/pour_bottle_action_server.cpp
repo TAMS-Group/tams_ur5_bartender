@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tf2/exceptions.h>
 #include <actionlib/server/simple_action_server.h>
 
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/robot_state/conversions.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
@@ -61,7 +61,7 @@ const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
 
 const int NUM_RETRIES_AFTER_JAM = 5;
 const tf::TransformListener* listener = NULL;
-const int planningTime = 30;
+const int planningTime = 5;
 
 class GrabPourPlace  {
 
@@ -70,8 +70,8 @@ class GrabPourPlace  {
 		float pos[3]; 
 	};
 
-	moveit::planning_interface::MoveGroup arm;
-	moveit::planning_interface::MoveGroup gripper;
+	moveit::planning_interface::MoveGroupInterface arm;
+	moveit::planning_interface::MoveGroupInterface gripper;
 
 	protected: 
 	ros::NodeHandle node_handle;
@@ -190,7 +190,7 @@ class GrabPourPlace  {
 		ROS_INFO("grab bottle");
 		arm.setSupportSurfaceName("table");
 		//Pick Bottle
-		if (arm.planGraspsAndPick(bottle_id)){
+		if (arm.planGraspsAndPick(bottles_[bottle_id])){
 			ROS_INFO("Execute pick succeded");
 			return true;
 		}
@@ -200,7 +200,7 @@ class GrabPourPlace  {
 		}
 	}
 
-	bool execute_plan(moveit::planning_interface::MoveGroup::Plan plan) {
+	bool execute_plan(moveit::planning_interface::MoveGroupInterface::Plan plan) {
 		return bool(arm.execute(plan));
 	}
 
@@ -358,7 +358,7 @@ class GrabPourPlace  {
 	}
 */
 
-	moveit::planning_interface::MoveGroup::Plan get_move_bottle_plan(std::string bottle_id, geometry_msgs::Pose pose, float zOffset) {
+	moveit::planning_interface::MoveGroupInterface::Plan get_move_bottle_plan(std::string bottle_id, geometry_msgs::Pose pose, float zOffset) {
 
 		//bottle up constraint (this constraint has a precomputed configuration space approximation)
 		//look into moveit/moveit_planners/ompl/.../demo_construct_state_database.cpp
@@ -392,10 +392,10 @@ class GrabPourPlace  {
 		arm.setPoseTarget(pose);
 
 		//start planning
-		moveit::planning_interface::MoveGroup::Plan best_plan;
+		moveit::planning_interface::MoveGroupInterface::Plan best_plan;
 		bool succeeded = false;
 		for(int i = 0; i < 10; i++) {
-			moveit::planning_interface::MoveGroup::Plan plan;
+			moveit::planning_interface::MoveGroupInterface::Plan plan;
 			arm.plan(plan);
 			if(!plan.trajectory_.joint_trajectory.points.empty() && can_pour(plan.trajectory_.joint_trajectory, pose, bottles_[bottle_id])) {
 				if(!succeeded) {
@@ -448,12 +448,12 @@ class GrabPourPlace  {
 		moveit::core::RobotState rstate(arm.getRobotModel());
 		moveit::core::jointTrajPointToRobotState(joint_trajectory, (size_t) (joint_trajectory.points.size() - 1), rstate);
 		arm.setPoseReferenceFrame("table_top");
-		moveit::planning_interface::MoveGroup::Plan plan = get_pour_bottle_plan(rstate, pose, bottle);
+		moveit::planning_interface::MoveGroupInterface::Plan plan = get_pour_bottle_plan(rstate, pose, bottle);
 		arm.setPathConstraints(constraints);
 		return !plan.trajectory_.joint_trajectory.points.empty();
 	}
 
-	moveit::planning_interface::MoveGroup::Plan get_pour_bottle_plan(moveit::core::RobotState state, geometry_msgs::Pose& start_pose, moveit_msgs::CollisionObject bottle) {
+	moveit::planning_interface::MoveGroupInterface::Plan get_pour_bottle_plan(moveit::core::RobotState state, geometry_msgs::Pose& start_pose, moveit_msgs::CollisionObject bottle) {
 		moveit_msgs::RobotState start_state;
 		moveit::core::robotStateToRobotStateMsg(state, start_state);
 		arm.setStartState(start_state);
@@ -489,7 +489,7 @@ class GrabPourPlace  {
 			}
 		}
 		arm.setStartStateToCurrentState();
-		moveit::planning_interface::MoveGroup::Plan result_plan;
+		moveit::planning_interface::MoveGroupInterface::Plan result_plan;
 		if(success_percentage > 0.95) {
 			result_plan.trajectory_ = trajectory;
 		}
@@ -500,11 +500,11 @@ class GrabPourPlace  {
 		ROS_INFO("Pour Bottle");
 		arm.setPoseReferenceFrame("world");
 		geometry_msgs::Pose start_pose = arm.getCurrentPose().pose;
-		moveit::planning_interface::MoveGroup::Plan pour_forward = get_pour_bottle_plan((*arm.getCurrentState()), start_pose, bottle); 
+		moveit::planning_interface::MoveGroupInterface::Plan pour_forward = get_pour_bottle_plan((*arm.getCurrentState()), start_pose, bottle);
 		bool success = !pour_forward.trajectory_.joint_trajectory.points.empty();
 		if(success) {
 			//reverse pouring trajectory
-			moveit::planning_interface::MoveGroup::Plan pour_backward;
+			moveit::planning_interface::MoveGroupInterface::Plan pour_backward;
 			reverse_trajectory(pour_forward.trajectory_, pour_backward.trajectory_);
 			ros::Duration(0.5).sleep();
 
@@ -598,7 +598,7 @@ class GrabPourPlace  {
 		//move bottle down
 		std::vector<geometry_msgs::Pose> waypoints;
 		waypoints.push_back(place_pose);
-		moveit::planning_interface::MoveGroup::Plan plan;
+		moveit::planning_interface::MoveGroupInterface::Plan plan;
 		moveit_msgs::RobotTrajectory trajectory;
 		double fraction = arm.computeCartesianPath(waypoints, 0.03, 3, trajectory);
 		ROS_INFO("Place Down trajectory (%.2f%% acheived)", fraction * 100.0);
@@ -643,7 +643,7 @@ class GrabPourPlace  {
 		ROS_INFO_STREAM("Retreating pose" << post_place_pose);
 		std::vector<geometry_msgs::Pose> retreat_waypoints;
 		retreat_waypoints.push_back(post_place_pose);
-		moveit::planning_interface::MoveGroup::Plan retreat_plan;
+		moveit::planning_interface::MoveGroupInterface::Plan retreat_plan;
 		moveit_msgs::RobotTrajectory retreat_trajectory;
 		double retreat_fraction = arm.computeCartesianPath(retreat_waypoints, 0.03, 3, retreat_trajectory);
 		retreat_plan.trajectory_ = retreat_trajectory;
@@ -773,8 +773,8 @@ class GrabPourPlace  {
 		stateSpace state = pickBottleUp;
 		stateSpace failedAtState = OK;
 
-		moveit::planning_interface::MoveGroup::Plan move_bottle_back;
-		moveit::planning_interface::MoveGroup::Plan move_bottle;
+		moveit::planning_interface::MoveGroupInterface::Plan move_bottle_back;
+		moveit::planning_interface::MoveGroupInterface::Plan move_bottle;
 		
 		do {
 			switch(state) {
@@ -912,7 +912,7 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "pour_bottle_server");
 	listener = new (tf::TransformListener);
 	GrabPourPlace gpp;
-	ros::AsyncSpinner spinner(1);
+	ros::AsyncSpinner spinner(4);
 	spinner.start();
 	ros::spin();
 	return 0;
