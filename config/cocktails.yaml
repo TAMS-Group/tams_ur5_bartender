@@ -46,6 +46,12 @@ cocktails:
             type: 'cola'
             amount: 20.0
 - cocktail:
+    name: 'Orange Juice'
+    ingredients:
+        - ingr:
+            type: 'orange juice'
+            amount: 20.0
+- cocktail:
     name: 'alexander'
     ingredients:
         - ingr:
