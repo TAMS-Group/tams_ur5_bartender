@@ -65,7 +65,7 @@ moveit_msgs::Constraints getConstraints(int states, std::string tolerance_id)
   moveit_msgs::OrientationConstraint ocm;
   ocm.link_name = "s_model_tool0";
   ocm.header.frame_id = "table_top";
-  ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(pi, 0, 0);
+  ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 0);
   ocm.absolute_x_axis_tolerance = tolerances[tolerance_id];
   ocm.absolute_y_axis_tolerance = tolerances[tolerance_id];
   ocm.absolute_z_axis_tolerance = pi;
@@ -73,7 +73,7 @@ moveit_msgs::Constraints getConstraints(int states, std::string tolerance_id)
   moveit_msgs::Constraints cmsg;
   cmsg.orientation_constraints.resize(1, ocm);
 	std::stringstream ss;
-	ss << ocm.link_name << ":upright:" << states << ":" << tolerance_id << ":tilted_base";
+	ss << ocm.link_name << ":upright:" << states << ":" << tolerance_id;
   cmsg.name = ss.str();
   return cmsg;
 }
@@ -98,7 +98,7 @@ void computeDB(const robot_model::RobotModelPtr& robot_model, unsigned int ns, u
   */
 
   ompl_interface.getConstraintsLibrary().addConstraintApproximation(c, "arm", ps, opt);
-  ompl_interface.getConstraintsLibrary().saveConstraintApproximations("tmp/constraints_approximation_database");
+  ompl_interface.getConstraintsLibrary().saveConstraintApproximations("cadb");
   ROS_INFO("Done");
 }
 
@@ -163,8 +163,7 @@ int main(int argc, char** argv)
 	}
 	*/
 
-	computeDB(rml.getModel(), 5000, nedges, "high");
-
+	computeDB(rml.getModel(), 20000, nedges, "high");
 
 	ros::shutdown();
 	return 0;

@@ -210,7 +210,7 @@ class GrabPourPlace  {
 		moveit_msgs::OrientationConstraint ocm;
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
-		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 0);
 		ocm.absolute_x_axis_tolerance = M_PI / 5;
 		ocm.absolute_y_axis_tolerance = M_PI / 5;
 		ocm.absolute_z_axis_tolerance = 2*M_PI;
@@ -370,14 +370,14 @@ class GrabPourPlace  {
 		moveit_msgs::OrientationConstraint ocm;
 		ocm.link_name = "s_model_tool0";
 		ocm.header.frame_id = "table_top";
-		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
-		ocm.absolute_x_axis_tolerance = 0.6;
-		ocm.absolute_y_axis_tolerance = 0.6;
+		ocm.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 0);
+		ocm.absolute_x_axis_tolerance = 0.65;
+		ocm.absolute_y_axis_tolerance = 0.65;
 		ocm.absolute_z_axis_tolerance = M_PI;
 		ocm.weight = 1.0;
 
 		moveit_msgs::Constraints constraints;
-		constraints.name = "s_model_tool0:upright:5000:high:tilted_base";
+		constraints.name = "s_model_tool0:upright:20000:high";
 		constraints.orientation_constraints.push_back(ocm);
 		arm.setPathConstraints(constraints);
 
@@ -548,12 +548,12 @@ class GrabPourPlace  {
 
 			//ROS_INFO_STREAM("computing waypoint for angle " << angle);
 			if(axis == "Y") {
-				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, -dFactor * angle, 0);
+				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, -dFactor * angle, 0);
 				float translation = dFactor * (sin(angle) * radius + tilt_factor * (glass_radius - 0.005 - 0.015));
 				target_pose.position.x = startX + translation;
 
 			} else { //X Axis
-				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI + dFactor * angle, 0, 0);
+				target_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0 + dFactor * angle, 0, 0);
 				float translation = dFactor * (sin(angle) * radius + tilt_factor * (glass_radius - 0.005));
 				target_pose.position.y = startY + translation;
 			}
@@ -706,7 +706,7 @@ class GrabPourPlace  {
 
 	geometry_msgs::Pose get_glass_pose() {
 		geometry_msgs::Pose pose = glass_.primitive_poses[0];
-		pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, 0);
+		pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 0);
 		return pose;
 	}
 
@@ -754,7 +754,7 @@ class GrabPourPlace  {
 		}
 		ROS_INFO_STREAM("Bottles Recognized");
 		geometry_msgs::Pose bottle_pose = bottle.primitive_poses[0];
-		bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI, 0, -M_PI/2);
+		bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, -M_PI/2);
 		glass_ = spawnObject("glass");
 
 		project16_manipulation::PourBottleResult result;
