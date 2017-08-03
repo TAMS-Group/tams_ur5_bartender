@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(project16_manipulation)
+set (CMAKE_CXX_STANDARD 11)
 
 find_package(cmake_modules REQUIRED)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
 	genmsg 
 	actionlib_msgs 
