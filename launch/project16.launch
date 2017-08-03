@@ -2,7 +2,7 @@
 <launch>
     <!-- Startup UR5 and Kinect -->
     <include file="$(find tams_ur5_setup_bringup)/launch/tams_ur5_setup_floor_kinect.launch"/>
-    <param name="move_group/constraint_approximations_path" value="$(find project16_manipulation)/cadb_20000_bagger"/>
+    <param name="move_group/constraint_approximations_path" value="$(find project16_manipulation)/cadb"/>
 
     <!-- Startup image processing -->
     <include file="$(find project16_image_processing)/launch/regular.launch"/>

@@ -3,7 +3,7 @@
 
     <!-- Startup UR5 W/O Kinect but with demo publisher -->
     <include file="$(find tams_ur5_setup_moveit_config)/launch/demo.launch"/>
-    <param name="move_group/constraint_approximations_path" value="$(find project16_manipulation)/cadb_20000_bagger"/>
+    <param name="move_group/constraint_approximations_path" value="$(find project16_manipulation)/cadb"/>
 
     <include file="$(find project16_image_processing)/launch/publishDemoBottles.launch"/>
 
