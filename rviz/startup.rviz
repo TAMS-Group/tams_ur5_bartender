@@ -79,7 +79,7 @@ Visualization Manager:
       Size (Pixels): 2
       Size (m): 0.01
       Style: Points
-      Topic: /camera/depth_registered/points
+      Topic: /kinect2/qhd/points
       Unreliable: true
       Use Fixed Frame: true
       Use rainbow: true
@@ -116,7 +116,7 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /camera/rgb/image_color
+      Image Topic: /kinect2/qhd/image_color_rect
       Max Value: 1
       Median window: 5
       Min Value: 0
