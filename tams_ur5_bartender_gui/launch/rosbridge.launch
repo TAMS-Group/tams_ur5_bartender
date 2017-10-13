@@ -4,5 +4,5 @@
         <arg name="port" value="8080"/>
     </include>
     
-    <node name="Gui" pkg="project16_gui" type="browser.sh" />
+    <node name="Gui" pkg="tams_ur5_bartender_gui" type="browser.sh" />
 </launch>
