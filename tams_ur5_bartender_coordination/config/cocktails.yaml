@@ -1,0 +1,1067 @@
+# Cocktails
+cocktails:
+- cocktail:
+    name: 'TAMS virgin'
+    ingredients:
+        - ingr:
+            type: 'orange juice'
+            amount: 12.0
+        - ingr:
+            type: 'grenadine'
+            amount: 2.0
+        - ingr:
+            type: 'lime juice'
+            amount: 2.0
+- cocktail:
+    name: 'TAMS libre'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 3.0
+        - ingr:
+            type: 'tequila'
+            amount: 3.0
+- cocktail:
+    name: 'TAMS libre special'
+    ingredients:
+        - ingr:
+            type: 'dark rum'
+            amount: 3.0
+        - ingr:
+            type: 'tequila'
+            amount: 3.0
+- cocktail:
+    name: 'kiba'
+    ingredients:
+        - ingr:
+            type: 'banana juice'
+            amount: 10.0
+        - ingr:
+            type: 'Cherry Juice'
+            amount: 10.0
+- cocktail:
+    name: 'Cola'
+    ingredients:
+        - ingr:
+            type: 'cola'
+            amount: 20.0
+- cocktail:
+    name: 'Orange Juice'
+    ingredients:
+        - ingr:
+            type: 'orange juice'
+            amount: 20.0
+- cocktail:
+    name: 'alexander'
+    ingredients:
+        - ingr:
+            type: 'cognac'
+            amount: 3.0
+        - ingr:
+            type: 'creme de cacao (brown)'
+            amount: 3.0
+        - ingr:
+            type: 'fresh cream'
+            amount: 3.0
+- cocktail:
+    name: 'americano'
+    ingredients:
+        - ingr:
+            type: 'campari'
+            amount: 3.0
+        - ingr:
+            type: 'red vermouth'
+            amount: 3.0
+        - ingr:
+            type: 'soda water'
+            amount: 2.0
+- cocktail:
+    name: 'angel face'
+    ingredients:
+        - ingr:
+            type: 'calvados'
+            amount: 3.0
+        - ingr:
+            type: 'gin'
+            amount: 3.0
+        - ingr:
+            type: 'apricot brandy'
+            amount: 3.0
+- cocktail:
+    name: 'aviation'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.5
+        - ingr:
+            type: 'maraschino'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+- cocktail:
+    name: 'bacardi'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 4.5
+        - ingr:
+            type: 'lime juice'
+            amount: 2.0
+        - ingr:
+            type: 'grenadine'
+            amount: 1.0
+- cocktail:
+    name: 'between the sheets'
+    ingredients:
+        - ingr:
+            type: 'cognac'
+            amount: 3.0
+        - ingr:
+            type: 'bacardi'
+            amount: 3.0
+        - ingr:
+            type: 'triple sec'
+            amount: 3.0
+        - ingr:
+            type: 'lime juice'
+            amount: 2.0
+- cocktail:
+    name: 'casino'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.0
+        - ingr:
+            type: 'maraschino'
+            amount: 1.0
+        - ingr:
+            type: 'orange bitters'
+            amount: 1.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.0
+- cocktail:
+    name: 'clover club'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.5
+        - ingr:
+            type: 'raspberry syrup'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'egg white'
+            amount: 1.0
+- cocktail:
+    name: 'daiquiri'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 4.5
+        - ingr:
+            type: 'simple syrup'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 2.5
+- cocktail:
+    name: 'derby'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 6.0
+        - ingr:
+            type: 'peach bitters'
+            amount: 0.1
+- cocktail:
+    name: 'dry martini'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 6.0
+        - ingr:
+            type: 'dry vermouth'
+            amount: 1.0
+- cocktail:
+    name: 'gin fizz'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.5
+        - ingr:
+            type: 'sugar syrup'
+            amount: 1.0
+        - ingr:
+            type: 'lime juice'
+            amount: 3.0
+        - ingr:
+            type: 'soda water'
+            amount: 8.0
+- cocktail:
+    name: 'john collins'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.5
+        - ingr:
+            type: 'sugar syrup'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 3.0
+        - ingr:
+            type: 'soda water'
+            amount: 6.0
+- cocktail:
+    name: 'manhattan'
+    ingredients:
+        - ingr:
+            type: 'whiskey'
+            amount: 5.0
+        - ingr:
+            type: 'red vermouth'
+            amount: 2.0
+        - ingr:
+            type: 'angostura bitters'
+            amount: 0.1
+- cocktail:
+    name: 'mary pickford'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 6.0
+        - ingr:
+            type: 'maraschino'
+            amount: 1.0
+        - ingr:
+            type: 'grenadine syrup'
+            amount: 1.0
+        - ingr:
+            type: 'pineapple juice'
+            amount: 6.0
+- cocktail:
+    name: 'monkey gland'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 5.0
+        - ingr:
+            type: 'orange juice'
+            amount: 3.0
+        - ingr:
+            type: 'absinth'
+            amount: 0.2
+        - ingr:
+            type: 'grenadine'
+            amount: 0.2
+- cocktail:
+    name: 'negroni'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 3.0
+        - ingr:
+            type: 'campari'
+            amount: 3.0
+        - ingr:
+            type: 'sweet red vermouth'
+            amount: 3.0
+- cocktail:
+    name: 'old fashioned'
+    ingredients:
+        - ingr:
+            type: 'bourbon'
+            amount: 4.5
+        - ingr:
+            type: 'angostura bitters'
+            amount: 0.2
+        - ingr:
+            type: 'plain water'
+            amount: 4.0
+- cocktail:
+    name: 'paradise'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 3.5
+        - ingr:
+            type: 'apricot brandy'
+            amount: 2.0
+        - ingr:
+            type: 'orange juice'
+            amount: 1.5
+- cocktail:
+    name: 'planters punch'
+    ingredients:
+        - ingr:
+            type: 'dark rum'
+            amount: 4.5
+        - ingr:
+            type: 'orange juice'
+            amount: 3.5
+        - ingr:
+            type: 'pineapple juice'
+            amount: 3.5
+        - ingr:
+            type: 'lime juice'
+            amount: 2.0
+        - ingr:
+            type: 'grenadine'
+            amount: 1.0
+        - ingr:
+            type: 'sugar syrup'
+            amount: 1.0
+        - ingr:
+            type: 'angostura bitters'
+            amount: 0.3
+- cocktail:
+    name: 'porto flip'
+    ingredients:
+        - ingr:
+            type: 'brandy'
+            amount: 1.5
+        - ingr:
+            type: 'red port'
+            amount: 4.5
+        - ingr:
+            type: 'egg yolk'
+            amount: 1.0
+- cocktail:
+    name: 'ramos gin fizz'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.5
+        - ingr:
+            type: 'sugar syrup'
+            amount: 3.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'cream'
+            amount: 6.0
+        - ingr:
+            type: 'flower water'
+            amount: 0.3
+        - ingr:
+            type: 'extract'
+            amount: 0.2
+        - ingr:
+            type: 'soda water'
+            amount: 4.0
+- cocktail:
+    name: 'rusty nail'
+    ingredients:
+        - ingr:
+            type: 'scotch whisky'
+            amount: 4.5
+        - ingr:
+            type: 'drambuie'
+            amount: 2.5
+- cocktail:
+    name: 'sazerac'
+    ingredients:
+        - ingr:
+            type: 'cognac'
+            amount: 5.0
+        - ingr:
+            type: 'absinthe'
+            amount: 1.0
+        - ingr:
+            type: 'peychauds bitters'
+            amount: 0.2
+- cocktail:
+    name: 'screwdriver'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 5.0
+        - ingr:
+            type: 'orange juice'
+            amount: 10.0
+- cocktail:
+    name: 'sidecar'
+    ingredients:
+        - ingr:
+            type: 'cognac'
+            amount: 5.0
+        - ingr:
+            type: 'triple sec'
+            amount: 2.0
+        - ingr:
+            type: 'lime juice'
+            amount: 2.0
+- cocktail:
+    name: 'stinger'
+    ingredients:
+        - ingr:
+            type: 'cognac'
+            amount: 5.0
+        - ingr:
+            type: 'creme de menthe (white)'
+            amount: 2.0
+- cocktail:
+    name: 'tuxedo'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 3.0
+        - ingr:
+            type: 'dry vermouth'
+            amount: 3.0
+        - ingr:
+            type: 'maraschino'
+            amount: 0.2
+        - ingr:
+            type: 'absinthe'
+            amount: 0.1
+        - ingr:
+            type: 'orange bitters'
+            amount: 0.3
+- cocktail:
+    name: 'whiskey sour'
+    ingredients:
+        - ingr:
+            type: 'bourbon'
+            amount: 4.5
+        - ingr:
+            type: 'sugar syrup'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 3.0
+- cocktail:
+    name: 'white lady'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.0
+        - ingr:
+            type: 'triple sec'
+            amount: 3.0
+        - ingr:
+            type: 'lime juice'
+            amount: 2.0
+- cocktail:
+    name: 'bellini'
+    ingredients:
+        - ingr:
+            type: 'prosecco'
+            amount: 10.0
+        - ingr:
+            type: 'peach puree'
+            amount: 5.0
+- cocktail:
+    name: 'black russian'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 5.0
+        - ingr:
+            type: 'coffee liqueur'
+            amount: 2.0
+- cocktail:
+    name: 'bloody mary'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 4.5
+        - ingr:
+            type: 'tomato juice'
+            amount: 9.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'worcestershire sauce'
+            amount: 0.3
+        - ingr:
+            type: 'tabasco'
+            amount: 0.1
+- cocktail:
+    name: 'caipirinha'
+    ingredients:
+        - ingr:
+            type: 'cachaca'
+            amount: 5.0
+- cocktail:
+    name: 'champagne cocktail'
+    ingredients:
+        - ingr:
+            type: 'champagne'
+            amount: 9.0
+        - ingr:
+            type: 'cognac'
+            amount: 1.0
+        - ingr:
+            type: 'angostura bitters'
+            amount: 0.2
+- cocktail:
+    name: 'cosmopolitan'
+    ingredients:
+        - ingr:
+            type: 'citron vodka'
+            amount: 4.0
+        - ingr:
+            type: 'triple sec'
+            amount: 1.5
+        - ingr:
+            type: 'cranberry juice'
+            amount: 3.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+- cocktail:
+    name: 'cuba libre'
+    ingredients:
+        - ingr:
+            type: 'dark rum'
+            amount: 2.0
+        - ingr:
+            type: 'cola'
+            amount: 12.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.0
+- cocktail:
+    name: 'french 75'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 3.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'sugar syrup'
+            amount: 0.2
+        - ingr:
+            type: 'champagne'
+            amount: 6.0
+- cocktail:
+    name: 'french connection'
+    ingredients:
+        - ingr:
+            type: 'cognac'
+            amount: 3.5
+        - ingr:
+            type: 'amaretto'
+            amount: 3.5
+- cocktail:
+    name: 'god father'
+    ingredients:
+        - ingr:
+            type: 'scotch'
+            amount: 3.5
+        - ingr:
+            type: 'amaretto'
+            amount: 3.5
+- cocktail:
+    name: 'god mother'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 3.5
+        - ingr:
+            type: 'amaretto'
+            amount: 3.5
+- cocktail:
+    name: 'golden dream'
+    ingredients:
+        - ingr:
+            type: 'galliano'
+            amount: 2.0
+        - ingr:
+            type: 'triple sec'
+            amount: 2.0
+        - ingr:
+            type: 'orange juice'
+            amount: 2.0
+        - ingr:
+            type: 'fresh cream'
+            amount: 1.0
+- cocktail:
+    name: 'grasshopper'
+    ingredients:
+        - ingr:
+            type: 'creme de cacao'
+            amount: 3.0
+        - ingr:
+            type: 'creme de menthe'
+            amount: 3.0
+        - ingr:
+            type: 'fresh cream'
+            amount: 3.0
+- cocktail:
+    name: 'harvey wallbanger'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 4.5
+        - ingr:
+            type: 'galliano'
+            amount: 1.5
+        - ingr:
+            type: 'orange juice'
+            amount: 9.0
+- cocktail:
+    name: 'hemingway special'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 6.0
+        - ingr:
+            type: 'maraschino'
+            amount: 1.5
+        - ingr:
+            type: 'grapefruit juice'
+            amount: 4.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+- cocktail:
+    name: 'horses neck'
+    ingredients:
+        - ingr:
+            type: 'brandy'
+            amount: 4.0
+        - ingr:
+            type: 'ginger ale'
+            amount: 12.0
+        - ingr:
+            type: 'angostura bitters'
+            amount: 0.2
+- cocktail:
+    name: 'irish coffee'
+    ingredients:
+        - ingr:
+            type: 'whiskey'
+            amount: 4.0
+        - ingr:
+            type: 'hot coffee'
+            amount: 9.0
+        - ingr:
+            type: 'fresh cream'
+            amount: 3.0
+- cocktail:
+    name: 'kir'
+    ingredients:
+        - ingr:
+            type: 'dry white wine'
+            amount: 9.0
+        - ingr:
+            type: 'creme de cassis'
+            amount: 1.0
+- cocktail:
+    name: 'long island ice tea'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 1.5
+        - ingr:
+            type: 'tequila'
+            amount: 1.5
+        - ingr:
+            type: 'vodka'
+            amount: 1.5
+        - ingr:
+            type: 'bacardi'
+            amount: 1.5
+        - ingr:
+            type: 'triple sec'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 2.5
+        - ingr:
+            type: 'cola'
+            amount: 6.0
+- cocktail:
+    name: 'mai-tai'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 4.0
+        - ingr:
+            type: 'dark rum'
+            amount: 2.0
+        - ingr:
+            type: 'triple sec'
+            amount: 1.5
+        - ingr:
+            type: 'orgeat syrup'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 1.0
+- cocktail:
+    name: 'margarita'
+    ingredients:
+        - ingr:
+            type: 'tequila'
+            amount: 3.5
+        - ingr:
+            type: 'triple sec'
+            amount: 2.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+- cocktail:
+    name: 'mimosa'
+    ingredients:
+        - ingr:
+            type: 'champagne'
+            amount: 7.5
+        - ingr:
+            type: 'orange juice'
+            amount: 7.5
+- cocktail:
+    name: 'mint julep'
+    ingredients:
+        - ingr:
+            type: 'bourbon'
+            amount: 6.0
+        - ingr:
+            type: 'water'
+            amount: 1.0
+- cocktail:
+    name: 'mojito'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 4.0
+        - ingr:
+            type: 'lime juice'
+            amount: 3.0
+        - ingr:
+            type: 'soda water'
+            amount: 6.0
+- cocktail:
+    name: 'moscow mule'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 4.5
+        - ingr:
+            type: 'ginger beer'
+            amount: 12.0
+        - ingr:
+            type: 'lime juice'
+            amount: 0.5
+- cocktail:
+    name: 'pina colada'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 3.0
+        - ingr:
+            type: 'pineapple juice'
+            amount: 9.0
+        - ingr:
+            type: 'coconut cream'
+            amount: 3.0
+- cocktail:
+    name: 'rose'
+    ingredients:
+        - ingr:
+            type: 'kirsch'
+            amount: 2.0
+        - ingr:
+            type: 'dry vermouth'
+            amount: 4.0
+        - ingr:
+            type: 'strawberry syrup'
+            amount: 3.0
+- cocktail:
+    name: 'sea breeze'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 4.0
+        - ingr:
+            type: 'cranberry juice'
+            amount: 12.0
+        - ingr:
+            type: 'grapefruit juice'
+            amount: 3.0
+- cocktail:
+    name: 'sex on the beach'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 4.0
+        - ingr:
+            type: 'peach schnapps'
+            amount: 2.0
+        - ingr:
+            type: 'cranberry juice'
+            amount: 4.0
+        - ingr:
+            type: 'orange juice'
+            amount: 4.0
+- cocktail:
+    name: 'singapore sling'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 3.0
+        - ingr:
+            type: 'cherry'
+            amount: 1.5
+        - ingr:
+            type: 'triple sec'
+            amount: 0.75
+        - ingr:
+            type: 'dom benedictine'
+            amount: 0.75
+        - ingr:
+            type: 'grenadine'
+            amount: 1.0
+        - ingr:
+            type: 'pineapple juice'
+            amount: 12.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'angostura bitters'
+            amount: 0.1
+- cocktail:
+    name: 'tequila sunrise'
+    ingredients:
+        - ingr:
+            type: 'grenadine'
+            amount: 1.5
+        - ingr:
+            type: 'tequila'
+            amount: 2.0
+        - ingr:
+            type: 'orange juice'
+            amount: 12.0
+- cocktail:
+    name: 'b52'
+    ingredients:
+        - ingr:
+            type: 'triple sec'
+            amount: 2.0
+        - ingr:
+            type: 'irish cream'
+            amount: 2.0
+        - ingr:
+            type: 'coffee liqueur'
+            amount: 2.0
+- cocktail:
+    name: 'barracuda'
+    ingredients:
+        - ingr:
+            type: 'gold rum'
+            amount: 4.5
+        - ingr:
+            type: 'galliano'
+            amount: 1.5
+        - ingr:
+            type: 'pineapple juice'
+            amount: 6.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.0
+        - ingr:
+            type: 'prosecco'
+            amount: 6.0
+- cocktail:
+    name: 'bramble'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 4.0
+        - ingr:
+            type: 'sugar syrup'
+            amount: 1.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'blackberry liqueur'
+            amount: 1.5
+- cocktail:
+    name: 'dark n stormy'
+    ingredients:
+        - ingr:
+            type: 'dark rum'
+            amount: 6.0
+        - ingr:
+            type: 'ginger beer'
+            amount: 10.0
+- cocktail:
+    name: 'dirty martini'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 6.0
+        - ingr:
+            type: 'dry vermouth'
+            amount: 1.0
+        - ingr:
+            type: 'olive juice'
+            amount: 1.0
+- cocktail:
+    name: 'espresso martini'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 5.0
+        - ingr:
+            type: 'coffee liqueur'
+            amount: 1.0
+        - ingr:
+            type: 'sugar syrup'
+            amount: 1.0
+        - ingr:
+            type: 'espresso'
+            amount: 3.0
+- cocktail:
+    name: 'french martini'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 4.5
+        - ingr:
+            type: 'raspberry liqueur'
+            amount: 1.5
+        - ingr:
+            type: 'pineapple juice'
+            amount: 1.5
+- cocktail:
+    name: 'kamikaze'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 3.0
+        - ingr:
+            type: 'triple sec'
+            amount: 3.0
+        - ingr:
+            type: 'lime juice'
+            amount: 3.0
+- cocktail:
+    name: 'lemon drop martini'
+    ingredients:
+        - ingr:
+            type: 'vodka citron'
+            amount: 2.5
+        - ingr:
+            type: 'triple sec'
+            amount: 2.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+- cocktail:
+    name: 'pisco sour'
+    ingredients:
+        - ingr:
+            type: 'pisco'
+            amount: 4.5
+        - ingr:
+            type: 'sugar syrup'
+            amount: 2.0
+        - ingr:
+            type: 'lime juice'
+            amount: 3.0
+        - ingr:
+            type: 'egg white'
+            amount: 1.0
+- cocktail:
+    name: 'russian spring punch'
+    ingredients:
+        - ingr:
+            type: 'vodka'
+            amount: 2.5
+        - ingr:
+            type: 'creme de cassis'
+            amount: 1.5
+        - ingr:
+            type: 'sugar syrup'
+            amount: 1.0
+        - ingr:
+            type: 'lime juice'
+            amount: 2.5
+- cocktail:
+    name: 'spritz veneziano'
+    ingredients:
+        - ingr:
+            type: 'prosecco'
+            amount: 6.0
+        - ingr:
+            type: 'aperol'
+            amount: 4.0
+        - ingr:
+            type: 'soda water'
+            amount: 4.0
+- cocktail:
+    name: 'tommys margarita'
+    ingredients:
+        - ingr:
+            type: 'tequila'
+            amount: 4.5
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
+        - ingr:
+            type: 'agave nectar'
+            amount: 1.0
+- cocktail:
+    name: 'vampiro'
+    ingredients:
+        - ingr:
+            type: 'tequila'
+            amount: 5.0
+        - ingr:
+            type: 'tomato juice'
+            amount: 7.0
+        - ingr:
+            type: 'orange juice'
+            amount: 3.0
+        - ingr:
+            type: 'lime juice'
+            amount: 1.0
+        - ingr:
+            type: 'honey'
+            amount: 0.5
+        - ingr:
+            type: 'worchestershire sauce'
+            amount: 0.1
+- cocktail:
+    name: 'vesper'
+    ingredients:
+        - ingr:
+            type: 'gin'
+            amount: 6.0
+        - ingr:
+            type: 'vodka'
+            amount: 1.5
+        - ingr:
+            type: 'lillet blonde'
+            amount: 0.75
+- cocktail:
+    name: 'yellow bird'
+    ingredients:
+        - ingr:
+            type: 'bacardi'
+            amount: 3.0
+        - ingr:
+            type: 'galliano'
+            amount: 1.5
+        - ingr:
+            type: 'triple sec'
+            amount: 1.5
+        - ingr:
+            type: 'lime juice'
+            amount: 1.5
