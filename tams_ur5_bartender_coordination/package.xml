@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>tams_ur5_bartender_coordinator</name>
+  <name>tams_ur5_bartender_coordination</name>
   <version>0.0.0</version>
-  <description>The tams_ur5_bartender_coordinator package</description>
+  <description>The tams_ur5_bartender_coordination package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->

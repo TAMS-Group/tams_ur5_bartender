@@ -49,14 +49,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
 
-#include <pr2016_msgs/BarCollisionObjectArray.h>
+#include <tams_ur5_bartender_msgs/BarCollisionObjectArray.h>
 
 
 const std::string ARM_ID = "arm";
 const std::string GRIPPER_ID = "gripper";
 bool USE_BOTTLE_PUBLISHER = true;
 bool OBJECTS_RECOGNIZED = true;
-const pr2016_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
+const tams_ur5_bartender_msgs::BarCollisionObjectArray* collision_objects_ = NULL;
 
 
 const int NUM_RETRIES_AFTER_JAM = 5;
@@ -676,7 +676,7 @@ class GrabPourPlace  {
 		rTrajectory.getRobotTrajectoryMsg(backward);
 	}
 
-	void onObjectsRecognized(const pr2016_msgs::BarCollisionObjectArray& objArray)
+	void onObjectsRecognized(const tams_ur5_bartender_msgs::BarCollisionObjectArray& objArray)
 	{
 		if(!OBJECTS_RECOGNIZED) {
 			OBJECTS_RECOGNIZED = true;

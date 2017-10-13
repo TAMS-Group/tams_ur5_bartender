@@ -88,7 +88,7 @@ function connectToRos() {
     cocktailClient = new ROSLIB.ActionClient({
         ros: ros,
         serverName: 'cocktail_mixer',
-        actionName: 'project16_coordinator/CocktailAction'
+        actionName: 'tams_ur5_bartender_coordination/CocktailAction'
     });
 }
 
@@ -98,7 +98,7 @@ function listenToAvailableCocktails() {
     availableCocktailslistener = new ROSLIB.Topic({
         ros: ros,
         name: 'availableCocktails',
-        messageType: 'pr2016_msgs/CocktailList'
+        messageType: 'tams_ur5_bartender_msgs/CocktailList'
     });
     availableCocktailslistener.subscribe(function (message) {
         addCocktails(message.cocktails, message.available, message.recognizedBottles, message.neededBottles);
