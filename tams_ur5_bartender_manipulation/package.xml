@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>project16_manipulation</name>
+  <name>tams_ur5_bartender_manipulation</name>
   <version>0.0.0</version>
-  <description>The project16_manipulation package</description>
+  <description>The tams_ur5_bartender_manipulation package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->

@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #define USE_MATH_DEFINES
-#include <project16_manipulation/PourBottleAction.h>
+#include <tams_ur5_bartender_manipulation/PourBottleAction.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -78,7 +78,7 @@ class GrabPourPlace  {
 	ros::ServiceClient planning_scene_diff_client;
 	ros::ServiceClient grasp_planning_service;
 	ros::Subscriber collision_obj_sub;
-	actionlib::SimpleActionServer<project16_manipulation::PourBottleAction>* as_;
+	actionlib::SimpleActionServer<tams_ur5_bartender_manipulation::PourBottleAction>* as_;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 
 	std::map<std::string, moveit_msgs::CollisionObject> bottles_;
@@ -103,7 +103,7 @@ class GrabPourPlace  {
 		planning_scene_diff_client.waitForExistence();
 
 		//Register action service
-		as_ = new actionlib::SimpleActionServer<project16_manipulation::PourBottleAction>(node_handle, "pour_bottle", boost::bind(&GrabPourPlace::execute, this, _1), false);
+		as_ = new actionlib::SimpleActionServer<tams_ur5_bartender_manipulation::PourBottleAction>(node_handle, "pour_bottle", boost::bind(&GrabPourPlace::execute, this, _1), false);
 		as_->start();
 
 		//subscribe collision objects
@@ -364,7 +364,7 @@ class GrabPourPlace  {
 		//look into moveit/moveit_planners/ompl/.../demo_construct_state_database.cpp
 		//The database is located at the 'constraints_approximation_database*' or 'cadb*' directory.
 		//To use the database, add following param to node 'move_group' in file 'move_group.launch' inside package 'tams_ur5_setup_moveit_config'.
-		//    <param name="constraint_approximations_path" value="$(find project16_manipulation)/<database path>" />
+		//    <param name="constraint_approximations_path" value="$(find tams_ur5_bartender_manipulation)/<database path>" />
 		
 		//orientation constraints
 		moveit_msgs::OrientationConstraint ocm;
@@ -712,13 +712,13 @@ class GrabPourPlace  {
 
         void publishCurrentFeedback(std::stringstream &stream)
         {		
-            project16_manipulation::PourBottleFeedback feedback;
+            tams_ur5_bartender_manipulation::PourBottleFeedback feedback;
             feedback.task_state = stream.str();
             as_->publishFeedback(feedback);
             stream.str("");
         }
         
-	void execute(const project16_manipulation::PourBottleGoalConstPtr& goal)
+	void execute(const tams_ur5_bartender_manipulation::PourBottleGoalConstPtr& goal)
 	{
 		ROS_INFO("Running pour bottle!");
 
@@ -757,7 +757,7 @@ class GrabPourPlace  {
 		bottle_pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, -M_PI/2);
 		glass_ = spawnObject("glass");
 
-		project16_manipulation::PourBottleResult result;
+		tams_ur5_bartender_manipulation::PourBottleResult result;
 		result.success = pouringStateMachine(bottle, portion_size);
 
 		if(result.success) {

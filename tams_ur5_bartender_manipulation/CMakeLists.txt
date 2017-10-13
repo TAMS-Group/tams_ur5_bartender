@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(project16_manipulation)
+project(tams_ur5_bartender_manipulation)
 set (CMAKE_CXX_STANDARD 11)
 
 find_package(cmake_modules REQUIRED)

@@ -24,10 +24,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include <project16_manipulation/PourBottleAction.h>
+#include <tams_ur5_bartender_manipulation/PourBottleAction.h>
 #include <actionlib/client/simple_action_client.h>
 
-typedef actionlib::SimpleActionClient<project16_manipulation::PourBottleAction> Client;
+typedef actionlib::SimpleActionClient<tams_ur5_bartender_manipulation::PourBottleAction> Client;
 
 int main(int argc, char** argv)
 {
@@ -35,8 +35,8 @@ int main(int argc, char** argv)
 	Client client("pour_bottle", true); // true -> don't need ros::spin()
 	client.waitForServer();
 	
-	project16_manipulation::PourBottleGoal goal;
-        project16_manipulation::PourBottleGoal goal2;
+	tams_ur5_bartender_manipulation::PourBottleGoal goal;
+        tams_ur5_bartender_manipulation::PourBottleGoal goal2;
 		
 	// Fill in goal 1 here
 	goal.bottle_id = "bacardi";
