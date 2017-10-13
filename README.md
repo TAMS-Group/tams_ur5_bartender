@@ -8,104 +8,59 @@ The goal of the project is to let an [UR5 robot arm](https://www.universal-robot
 In other words, the robot arm is supposed prepare a drink following a cocktail recipe and based on user input from a web interface.
 
 
-## Getting Started
-
-The fastest way of getting started is to clone the repository that subsumes all required repos as submodules; with the  *recursive* flag set the submodules are directly cloned as well:
-
-```
-git clone --recursive ssh://gitolite@git.mafiasi.de/masterproject-intelligent-robotics/2016-masterproject-intelligent-robotics/bartender-project.git
-```
-
-However, if the host repository has already been cloned the "usual" way, the same thing can be achieved by explicitly initializing and updating the submodules:
-
-```
-cd bartender-project
-```
-
-```
-git submodule update --init
-```
-
-**Relevant for devel:**
-
-**The host repository, in our case "bartender-project", will point towards particular versions of the submodules and thus not automatically towards the newest commit on the master branch. Therefore, cloning or updating the submodules as described above might result in older commits rather than the newest commits on branches.**
-
-The [*remote* flag](https://git-scm.com/docs/git-submodule#git-submodule---remote) takes care of that:
-
-```
-git submodule update --init --remote
-```
-
-If the HEAD of a submodule is detached which seems to happen quite often in the world of submodules, one can fix that with an ```git checkout master``` for that submodule or just do it for all via:
-
-```
-git submodule foreach git checkout master
-```
-
-An alternativ to the ```git submodule update --init --remote``` command and maybe easier to remember is the following:
-
-```
-git submodule foreach git pull origin master
-```
-
-
-
-## Dependencies
-
-* ```project16_manipulation```
-   * [MoveIt!](http://moveit.ros.org/)
-     * we encountered a couple of bugs which we bypassed in the original code
-   * [```tams_ur5_setup```](https://github.com/TAMS-Group/tams_ur5_setup.git) with branch 'project2016'
-   * [```tams_ur5```](https://github.com/TAMS-Group/tams_ur5.git)
-* ```project16_image_processing```
-   * [```OpenCV```](http://opencv.org/)
-   * [```Kinect driver```](http://wiki.ros.org/freenect_launch)
-   * [```apriltags_ros```](http://wiki.ros.org/apriltags_ros)
-   * [```Camera Positioner```](https://github.com/TAMS-Group/camera_positioner)
-* ```project16_gui```
-	* [```rosbridge_suite```](http://wiki.ros.org/rosbridge_suite)
-
-
 
 ## Running The Bartender
 
 After getting the host repo and all the dependencies do a ```catkin_make``` and off you might go:
+The demo can be run both with and without hardware.
+Each method only requires launching a single launch file, which will start all necessary processes,
+drivers and a simple web interface from which the cocktails can be ordered.
 
 
 ### Run On Hardware
 
 ```
-roslaunch project16_coordinator project16.launch
+roslaunch tams_ur5_bartender bartender.launch
 ```
-
 
 ### Run In Simulation
 
-Simulate everything in RVIZ: the image processing part is completely omitted and covered by ```publishDemoBottles.launch```:
-
+The demo can be simulated and visualized in RVIZ completely by running
 ```
-roslaunch project16_coordinator simulationProject16.launch 
+roslaunch tams_ur5_coordination simulation.launch 
 ```
 
 
+### Packages
 
 
 
-## Submodules
+* ```tams_ur5_bartender_msgs```
 
-* ```find_object_2d```
+* ```tams_ur5_bartender_coordination```
 
-* ```kinect_calibration```
+* ```tams_ur5_bartender_gui```
 
-* ```pr2016_msgs```
+* ```tams_ur5_bartender_image_processing```
 
-* ```project16_coordinator```
+* ```tams_ur5_bartender_manipulation```
 
-* ```project16_gui```
+## Dependencies
 
-* ```project16_image_processing```
+* ```tams_ur5_bartender_manipulation```
+   * [MoveIt!](http://moveit.ros.org/)
+     * we encountered a couple of bugs which we bypassed in the original code
+   * [```tams_ur5_setup```](https://github.com/TAMS-Group/tams_ur5_setup.git) with branch 'project2016'
+   * [```tams_ur5```](https://github.com/TAMS-Group/tams_ur5.git)
+* ```tams_ur5_bartender_image_processing```
+   * [```OpenCV```](http://opencv.org/)
+   * [```Kinect driver```](http://wiki.ros.org/freenect_launch)
+   * [```apriltags_ros```](http://wiki.ros.org/apriltags_ros)
+   * [```Camera Positioner```](https://github.com/TAMS-Group/camera_positioner)
+* ```tams_ur5_bartender_gui```
+	* [```rosbridge_suite```](http://wiki.ros.org/rosbridge_suite)
 
-* ```project16_manipulation```
+
 
 
 
