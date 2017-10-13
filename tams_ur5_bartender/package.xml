@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>project16</name>
+  <name>tams_ur5_bartender</name>
   <version>1.0.0</version>
-  <description>Package with top launch files of the project 2016</description>
+  <description>Package with top launch files of the bartender demo from project 2016</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

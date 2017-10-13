@@ -11,7 +11,7 @@ find_package(catkin REQUIRED)
 
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES project16
+#  LIBRARIES tams_ur5_bartender
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
