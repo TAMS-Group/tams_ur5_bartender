@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>project16_coordinator</name>
+  <name>tams_ur5_bartender_coordinator</name>
   <version>0.0.0</version>
-  <description>The project16_coordinator package</description>
+  <description>The tams_ur5_bartender_coordinator package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -43,14 +43,14 @@
   <build_depend>roscpp</build_depend>
   <build_depend>actionlib</build_depend>
   <build_depend>actionlib_msgs</build_depend>
-  <build_depend>project16_manipulation</build_depend>
-  <build_depend>pr2016_msgs</build_depend>
+  <build_depend>tams_ur5_bartender_manipulation</build_depend>
+  <build_depend>tams_ur5_bartender_msgs</build_depend>
   
   <run_depend>roscpp</run_depend>
   <run_depend>actionlib</run_depend>
   <run_depend>actionlib_msgs</run_depend>
-  <run_depend>project16_manipulation</run_depend>
-  <run_depend>pr2016_msgs</run_depend>
+  <run_depend>tams_ur5_bartender_manipulation</run_depend>
+  <run_depend>tams_ur5_bartender_msgs</run_depend>
 
 
 

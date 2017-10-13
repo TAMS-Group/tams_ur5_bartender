@@ -30,15 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <shape_msgs/SolidPrimitive.h>
-#include <pr2016_msgs/BarCollisionObjectArray.h>
+#include <tams_ur5_bartender_msgs/BarCollisionObjectArray.h>
 #include <visualization_msgs/Marker.h>
 #include <XmlRpcValue.h>
 #include <XmlRpcException.h>
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
-#include <project16_coordinator/CocktailAction.h>
-#include <project16_manipulation/PourBottleAction.h>
-#include <pr2016_msgs/CocktailList.h>
+#include <tams_ur5_bartender_coordination/CocktailAction.h>
+#include <tams_ur5_bartender_manipulation/PourBottleAction.h>
+#include <tams_ur5_bartender_msgs/CocktailList.h>
 
 
 // Cocktail Object
@@ -74,19 +74,19 @@ private:
 
 };
 
-class DrinkChooser {
+class BartenderCoordination {
 public:
 
-    DrinkChooser() {
+    BartenderCoordination() {
         ros::NodeHandle pnh("~");
 
         ros::NodeHandle nh;
 
         //register for recognized Objects 
-        sub_ = nh.subscribe("recognizedObjects", 1000, &DrinkChooser::objectsCallback, this);
+        sub_ = nh.subscribe("recognizedObjects", 1000, &BartenderCoordination::objectsCallback, this);
 
         //register publisher for available cocktails
-        object_pub_ = nh.advertise<pr2016_msgs::CocktailList>("availableCocktails", 1, true);
+        object_pub_ = nh.advertise<tams_ur5_bartender_msgs::CocktailList>("availableCocktails", 1, true);
 
         pnh.getParam("cocktails", cocktails_);
 
@@ -94,7 +94,7 @@ public:
         max_ingr_ = 0;
 
         //Register action service
-        as_ = new actionlib::SimpleActionServer<project16_coordinator::CocktailAction>(nh, "cocktail_mixer", boost::bind(&DrinkChooser::mix, this, _1), false);
+        as_ = new actionlib::SimpleActionServer<tams_ur5_bartender_coordination::CocktailAction>(nh, "cocktail_mixer", boost::bind(&BartenderCoordination::mix, this, _1), false);
 
         as_->start();
 
@@ -125,7 +125,7 @@ public:
 
     //Save bottles to internal Bottle DB
 
-    void objectsCallback(const pr2016_msgs::BarCollisionObjectArrayConstPtr & msg) {
+    void objectsCallback(const tams_ur5_bartender_msgs::BarCollisionObjectArrayConstPtr & msg) {
         //delete old db
         bottles_.clear();
         if (msg->objects.size()) {
@@ -142,7 +142,7 @@ public:
 
     // mixing action
 
-    void mix(const project16_coordinator::CocktailGoalConstPtr& goal) {
+    void mix(const tams_ur5_bartender_coordination::CocktailGoalConstPtr& goal) {
         Cocktail ordered_cocktail;
         bool success = false;
 
@@ -166,7 +166,7 @@ public:
         }
 
         //call pour bottle action server
-        actionlib::SimpleActionClient<project16_manipulation::PourBottleAction> ac("pour_bottle", true);
+        actionlib::SimpleActionClient<tams_ur5_bartender_manipulation::PourBottleAction> ac("pour_bottle", true);
         ac.waitForServer();
 
         ROS_INFO_STREAM("Start mixing " << ordered_cocktail.getName());
@@ -179,7 +179,7 @@ public:
         max_ingr_ = ingr.size();
         //iterate over ingredients of cocktail
         for (it = ingr.begin(); (it != ingr.end()) && success_; it++) {
-            project16_manipulation::PourBottleGoal goal;
+            tams_ur5_bartender_manipulation::PourBottleGoal goal;
             current_ingr_ = std::distance(ingr.begin(), ingr.find(it->first)) + 1;
 
             std::stringstream ss;
@@ -192,9 +192,9 @@ public:
 
             //send mixing goal of actual ingredient
             ac.sendGoal(goal,
-                    boost::bind(&DrinkChooser::doneCB, this, _1, _2),
-                    boost::bind(&DrinkChooser::actCB, this),
-                    boost::bind(&DrinkChooser::feedCB, this, _1));
+                    boost::bind(&BartenderCoordination::doneCB, this, _1, _2),
+                    boost::bind(&BartenderCoordination::actCB, this),
+                    boost::bind(&BartenderCoordination::feedCB, this, _1));
             //wait for finish
             ac.waitForResult();
         }
@@ -212,7 +212,7 @@ public:
         as_->setSucceeded(result_);
     }
 
-    void doneCB(const actionlib::SimpleClientGoalState& state, const project16_manipulation::PourBottleResultConstPtr& result) {
+    void doneCB(const actionlib::SimpleClientGoalState& state, const tams_ur5_bartender_manipulation::PourBottleResultConstPtr& result) {
         success_ = result->success;
     }
 
@@ -220,7 +220,7 @@ public:
 
     }
 
-    void feedCB(const project16_manipulation::PourBottleFeedbackConstPtr& feed) {
+    void feedCB(const tams_ur5_bartender_manipulation::PourBottleFeedbackConstPtr& feed) {
         //on feedback publish feedback on own feedback topic
         std::stringstream ss;
         ss << current_ingr_;
@@ -234,7 +234,7 @@ public:
     //generate available cocktail list
 
     void sendCocktailList() {
-        pr2016_msgs::CocktailList clist;
+        tams_ur5_bartender_msgs::CocktailList clist;
         bool iteratedThroughAllBottles = false;
         //iterate over all cocktails
         for (int i = 0; i < cocktails_db_.size(); i++) {
@@ -286,17 +286,17 @@ private:
     std::vector <Cocktail> cocktails_db_;
     std::vector <std::string> bottles_;
     bool success_;
-    actionlib::SimpleActionServer<project16_coordinator::CocktailAction>* as_;
-    project16_coordinator::CocktailFeedback feedback_;
-    project16_coordinator::CocktailResult result_;
+    actionlib::SimpleActionServer<tams_ur5_bartender_coordination::CocktailAction>* as_;
+    tams_ur5_bartender_coordination::CocktailFeedback feedback_;
+    tams_ur5_bartender_coordination::CocktailResult result_;
     int current_ingr_;
     int max_ingr_;
 };
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "DrinkChooser");
+    ros::init(argc, argv, "BartenderCoordination");
 
-    DrinkChooser sync;
+    BartenderCoordination sync;
 
     ros::Rate loop_rate(1);
     while (ros::ok()) {

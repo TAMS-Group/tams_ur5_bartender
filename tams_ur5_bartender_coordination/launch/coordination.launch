@@ -1,0 +1,7 @@
+<launch>
+    <!--Starting tams_ur5_bartender_coordination-->
+    <node pkg="tams_ur5_bartender_coordination" type="bartender_coordination" name="bartender_coordination" output="screen">
+        <rosparam command="load" file="$(find tams_ur5_bartender_coordination)/config/cocktails.yaml" />
+    </node>
+    
+</launch>

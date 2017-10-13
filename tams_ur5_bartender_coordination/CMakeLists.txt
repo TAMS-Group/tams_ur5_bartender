@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(project16_coordinator)
+project(tams_ur5_bartender_coordination)
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
@@ -7,11 +7,11 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs 
   sensor_msgs
   moveit_msgs
-  pr2016_msgs
+  tams_ur5_bartender_msgs
   image_transport
   tf
   visualization_msgs
-  project16_manipulation
+  tams_ur5_bartender_manipulation
 )
 
 add_action_files(
@@ -32,6 +32,6 @@ include_directories(
 )
 
 
-add_executable(tams_pr16_drink_chooser src/tams_pr16_drink_chooser.cpp)
-target_link_libraries (tams_pr16_drink_chooser ${catkin_LIBRARIES})
-add_dependencies(tams_pr16_drink_chooser ${catkin_EXPORTED_TARGETS})
+add_executable(bartender_coordination src/bartender_coordination.cpp)
+target_link_libraries (bartender_coordination ${catkin_LIBRARIES})
+add_dependencies(bartender_coordination ${catkin_EXPORTED_TARGETS})
