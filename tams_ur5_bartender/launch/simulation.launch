@@ -10,8 +10,8 @@
     <!-- Startup manipulation -->
     <include file="$(find tams_ur5_bartender_manipulation)/launch/manipulation.launch"/>
     
-    <!-- Startup coordinator -->
-    <include file="$(find tams_ur5_bartender_coordinator)/launch/coordinator.launch"/>
+    <!-- Startup coordination -->
+    <include file="$(find tams_ur5_bartender_coordination)/launch/coordination.launch"/>
 
     <!-- Startup GUI -->
     <include file="$(find tams_ur5_bartender_gui)/launch/rosbridge.launch"/>
