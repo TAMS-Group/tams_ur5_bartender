@@ -1,0 +1,103 @@
+# Bottles
+bottles:
+- bottle:
+    id: 1
+    name: 'bacardi'
+    height_bottle: 0.19
+    radius_bottle: 0.0375
+    height_neck: 0.127
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: 0.2
+    pos_y: -0.2
+- bottle:
+    id: 2
+    name: 'tequila'
+    height_bottle: 0.19
+    radius_bottle: 0.0375
+    height_neck: 0.127
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: 0.2
+    pos_y: 0.0
+- bottle:
+    id: 3
+    name: 'vodka'
+    height_bottle: 0.19
+    radius_bottle: 0.0375
+    height_neck: 0.127
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -0.4
+    pos_y: -0.4
+- bottle:
+    id: 4
+    name: 'gin'
+    height_bottle: 0.19
+    radius_bottle: 0.0375
+    height_neck: 0.127
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -0.5
+    pos_y: -0.5
+- bottle:
+    id: 5
+    name: 'triple sec'
+    height_bottle: 0.19
+    radius_bottle: 0.0375
+    height_neck: 0.127
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -0.6
+    pos_y: -0.6
+- bottle:
+    id: 6
+    name: 'cola'
+    height_bottle: 0.18
+    radius_bottle: 0.0375
+    height_neck: 0.142
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -0.7
+    pos_y: -0.7
+- bottle:
+    id: 7
+    name: 'grenadine'
+    height_bottle: 0.21
+    radius_bottle: 0.04
+    height_neck: 0.094
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -0.8
+    pos_y: -0.8
+- bottle:
+    id: 8
+    name: 'orange juice'
+    height_bottle: 0.19
+    radius_bottle: 0.0375
+    height_neck: 0.127
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -0.9
+    pos_y: -0.9
+- bottle:
+    id: 9
+    name: 'lime juice'
+    height_bottle: 0.2
+    radius_bottle: 0.036
+    height_neck: 0.13
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -1.0
+    pos_y: -1.0
+- bottle:
+    id: 10
+    name: 'dark rum'
+    height_bottle: 0.18
+    radius_bottle: 0.0375
+    height_neck: 0.135
+    radius_neck: 0.0175
+    height_label: 0.095
+    pos_x: -1.0
+    pos_y: -1.0
+

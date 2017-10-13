@@ -1,0 +1,228 @@
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+@font-face {
+    font-family: Nano;
+    src: url(../fonts/Nano/NANO-LOW.TTF);
+}
+
+#bottlesOfCocktail {
+    padding: 1em;
+}
+
+.jumbotron{
+    background: rgba(255,255,255,0);
+}
+
+.jumbotron > .container {
+    background: rgba(255,255,255,0.5);
+    border-radius: 20px; 
+    height: 100%;
+    padding: 2em;
+    -webkit-transition: all 1s ease-in-out;
+    -moz-transition: all 1s ease-in-out;
+    -o-transition: all 1s ease-in-out;
+    transition: all 1s ease-in-out;
+}
+
+.jumbotron h1 {
+    color: #245580;
+    font-size: 1em;
+}
+
+.btn-group{
+    position: static;
+    max-height: 300px;
+    overflow: auto;
+}
+
+.btn-group label {
+    font-size: 18pt;
+}
+
+.btn-default:active, .btn-default.active {
+    background: #f4d35e;
+}
+
+.btn-primary:hover, .btn-primary.hover {
+    text-decoration: none;
+}
+
+#mixButton {
+    margin-bottom: 0.5em;
+    font-size: 1.5em;
+    letter-spacing: 0.2em; 
+}
+
+#bg {
+    position: fixed; 
+    top: -50%; 
+    left: -50%; 
+    width: 200%; 
+    height: 200%;
+    z-index: -1;
+}
+
+#bg img {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0; 
+    margin: auto; 
+    min-width: 50%;
+    min-height: 50%;
+}
+
+.modal {
+    display:    none;
+    position:   fixed;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .8 ) 
+        url('../animations/ajax-loader.gif') 
+        50% 50% 
+        no-repeat;
+}
+
+.loading-icon {
+    opacity:    100;
+    z-index:    1000;
+    background: url('../animations/ajax-loader.gif') 50% 50% no-repeat;
+}
+
+/* When the body has the loading class, we turn
+   the scrollbar off with overflow:hidden */
+body.loading {
+    overflow: hidden;   
+}
+
+/* Anytime the body has the loading class, our
+   modal element will be visible */
+body.loading .modal {
+    display: block;
+}
+
+.noCocktails {
+    color: #832232;
+}
+
+.green {
+    font-weight: bold;
+    color: #ade25d;
+}
+
+.darkgreen {
+    font-weight: bold;
+    color: #4F772D;
+}
+
+.red {
+    font-weight: bold;
+    color: #ff5a5f;
+}
+
+.darkred {
+    font-weight: bold;
+    color: #A63446;
+}
+
+.black {
+    color: #0a0908;
+}
+
+.msg-container{
+    display: block;
+    background: rgba(255,255,255,0.75);
+    border-radius: 10px; 
+}
+
+.msg-wrap{
+    display: table;
+    width: 100%;
+    text-align: center;
+    height: 4em;
+}
+
+.msg {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 0 1em;
+}
+
+.robo {
+    font-family: 'Nano', sans-serif;
+}
+
+.shade {
+    transition: color 0.2s ease 0s;
+    color: #0a0908;
+    letter-spacing: .15em;
+    text-shadow: 
+        1px -1px 0 #767676, 
+        -1px 2px 1px #737272, 
+        -2px 4px 1px #767474, 
+        -3px 6px 1px #787777, 
+        -4px 8px 1px #7b7a7a, 
+        -5px 10px 1px #7f7d7d;
+}
+
+.availableBottles{
+    background: rgba(255,255,255,0.75);
+    border-radius: 10px; 
+}
+
+.dropdown:hover > ul.dropdown-menu {
+    display: block;    
+}
+
+.dropdown-menu{
+    list-style: none;
+    background: rgba(255,255,255,0.8);
+    font-weight: bold;
+}
+
+.dropdown-menu li{
+    margin-left: 2em;
+}
+
+.ingredients{
+    text-align: left;
+}
+
+@media(min-width:450px){
+    .jumbotron h1 {
+        font-size: 1.2em;
+    }
+}
+@media(min-width:550px){
+    .jumbotron h1 {
+        font-size: 1.5em;
+    }
+}
+@media(min-width:680px){
+    .jumbotron h1 {
+        font-size: 2em;
+    }
+}
+@media(min-width:970px){
+    .jumbotron h1 {
+        font-size: 2.2em;
+    } 
+}
+@media(min-width:1170px) {
+    .jumbotron h1 {
+        font-size: 3em;
+    }
+}
+@media(max-width:280px) {
+    .jumbotron p {
+        font-size: 1em;
+    }
+}
+
+
+

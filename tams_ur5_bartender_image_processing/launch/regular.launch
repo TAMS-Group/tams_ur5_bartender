@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <!-- find_object_2d -->
+    <node pkg="find_object_2d" type="find_object_2d" name="find_object_2d">
+        <!-- set gui to false for production -->
+        <param name="gui" value="false" type="bool"/>
+        <param name="settings_path" value="$(find project16_image_processing)/config/find_object_2d.ini" type="str"/>
+        <param name="subscribe_depth" value="true" type="bool"/>
+        <param name="objects_path" value="$(find project16_image_processing)/objects" type="str"/>
+        <param name="object_prefix" value="object" type="str"/>
+        <!-- nodes can have their own remap args -->
+        <remap from="rgb/image_rect_color" to="camera/rgb/image_rect_color"/>
+        <remap from="depth_registered/image_raw" to="camera/depth_registered/image_raw"/>
+        <remap from="depth_registered/camera_info" to="camera/depth_registered/camera_info"/>
+    </node>
+    
+    <!--Starting tams_pr16_bar_objects-->
+    <node pkg="project16_image_processing" type="tams_pr16_bar_objects" name="tams_pr16_bar_objects" output="screen">
+        <rosparam command="load" file="$(find project16_image_processing)/config/bottles.yaml" />
+    </node>
+
+    <node pkg="project16_image_processing" type="marker_publisher" name="marker_publisher"/>
+
+</launch>
