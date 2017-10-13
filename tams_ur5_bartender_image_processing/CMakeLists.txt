@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(project16_image_processing)
+project(tams_ur5_bartender_image_processing)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs 
   sensor_msgs
   moveit_msgs
-  pr2016_msgs
+  tams_ur5_bartender_msgs
   image_transport
   find_object_2d
   tf
@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES project16_image_processing
+#  LIBRARIES tams_ur5_image_processing
 #  CATKIN_DEPENDS roscpp
 #  DEPENDS system_lib
 )
@@ -31,14 +31,14 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(tams_pr16_bar_objects src/tams_pr16_bar_objects.cpp)
-target_link_libraries (tams_pr16_bar_objects ${catkin_LIBRARIES})
-add_dependencies(tams_pr16_bar_objects ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(bottle_recognition src/bottle_recognition.cpp)
+target_link_libraries (bottle_recognition ${catkin_LIBRARIES})
+add_dependencies(bottle_recognition ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-add_executable(marker_publisher src/marker_publisher.cpp)
-target_link_libraries (marker_publisher ${catkin_LIBRARIES})
-add_dependencies(marker_publisher ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(bottle_publisher src/bottle_publisher.cpp)
+target_link_libraries (bottle_publisher ${catkin_LIBRARIES})
+add_dependencies(bottle_publisher ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-add_executable(tams_pr16_demo_bottle_publisher src/tams_pr16_demo_bottle_publisher.cpp)
-target_link_libraries (tams_pr16_demo_bottle_publisher ${catkin_LIBRARIES})
-add_dependencies(tams_pr16_demo_bottle_publisher ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(demo_bottle_publisher src/demo_bottle_publisher.cpp)
+target_link_libraries (demo_bottle_publisher ${catkin_LIBRARIES})
+add_dependencies(demo_bottle_publisher ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})

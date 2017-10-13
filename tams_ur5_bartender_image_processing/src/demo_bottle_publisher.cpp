@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <shape_msgs/SolidPrimitive.h>
 #include <XmlRpcValue.h>
 #include <XmlRpcException.h>
-#include <pr2016_msgs/BarCollisionObjectArray.h>
+#include <tams_ur5_bartender_msgs/BarCollisionObjectArray.h>
 
 class Bottle {
 public:
@@ -110,7 +110,7 @@ public:
         pnh.param("object_prefix", objFramePrefix_, objFramePrefix_);
 
         ros::NodeHandle nh;
-        object_pub_ = nh.advertise<pr2016_msgs::BarCollisionObjectArray>("recognizedObjects", 1);
+        object_pub_ = nh.advertise<tams_ur5_bartender_msgs::BarCollisionObjectArray>("recognizedObjects", 1);
 
         pnh.getParam("bottles", bottles);
 
@@ -133,7 +133,7 @@ public:
     }
 
     void publishDemoObjects() {
-        pr2016_msgs::BarCollisionObjectArray recObjectArr;
+        tams_ur5_bartender_msgs::BarCollisionObjectArray recObjectArr;
         //HEADER BAUEN
         recObjectArr.header.stamp = ros::Time::now();
         recObjectArr.header.frame_id = mapFrameId_;

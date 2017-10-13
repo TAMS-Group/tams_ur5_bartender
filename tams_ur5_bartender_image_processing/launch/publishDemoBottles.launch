@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <!--Starting tams_pr16_bar_objects-->
-    <node pkg="project16_image_processing" type="tams_pr16_demo_bottle_publisher" name="tams_pr16_demo_bottle_publisher">
-        <rosparam command="load" file="$(find project16_image_processing)/config/bottles.yaml" />
+    <node pkg="tams_ur5_bartender_image_processing" type="demo_bottle_publisher" name="demo_bottle_publisher">
+        <rosparam command="load" file="$(find tams_ur5_bartender_image_processing)/config/bottles.yaml" />
     </node>
 </launch>

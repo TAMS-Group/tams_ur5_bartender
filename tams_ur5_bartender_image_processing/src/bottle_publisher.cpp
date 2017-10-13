@@ -32,14 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <find_object_2d/ObjectsStamped.h>
 #include <tf/transform_listener.h>
 #include <shape_msgs/SolidPrimitive.h>
-#include <pr2016_msgs/BarCollisionObjectArray.h>
+#include <tams_ur5_bartender_msgs/BarCollisionObjectArray.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 
-class MarkerPublisher {
+class BottlePublisher {
 public:
 
-    MarkerPublisher() : mapFrameId_("/table_top"), objFramePrefix_("object") {
+    BottlePublisher() : mapFrameId_("/table_top"), objFramePrefix_("object") {
         ros::NodeHandle pnh("~");
         pnh.param("map_frame_id", mapFrameId_, mapFrameId_);
         pnh.param("object_prefix", objFramePrefix_, objFramePrefix_);
@@ -48,12 +48,12 @@ public:
         marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
 
         // Subscribe to recgnized Objects topics
-        sub_ = nh.subscribe("recognizedObjects", 10, &MarkerPublisher::objectsCallback, this);
+        sub_ = nh.subscribe("recognizedObjects", 10, &BottlePublisher::objectsCallback, this);
     }
 
     //Publish markers for bottles
 
-    void objectsCallback(const pr2016_msgs::BarCollisionObjectArrayConstPtr & msg) {
+    void objectsCallback(const tams_ur5_bartender_msgs::BarCollisionObjectArrayConstPtr & msg) {
         visualization_msgs::MarkerArray markerArr;
         if (msg->objects.size()) {
             for (unsigned int i = 0; i < msg->objects.size(); i += 1) {
@@ -128,9 +128,9 @@ private:
 };
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "TestMarkerPublisher");
+    ros::init(argc, argv, "TestBottlePublisher");
 
-    MarkerPublisher sync;
+    BottlePublisher sync;
 
     ros::Rate loop_rate(10);
     ros::spin();

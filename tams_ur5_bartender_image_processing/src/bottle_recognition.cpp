@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <shape_msgs/SolidPrimitive.h>
 #include <XmlRpcValue.h>
 #include <XmlRpcException.h>
-#include <pr2016_msgs/BarCollisionObjectArray.h>
+#include <tams_ur5_bartender_msgs/BarCollisionObjectArray.h>
 
 class Bottle {
 public:
@@ -98,7 +98,7 @@ public:
         pnh.param("object_prefix", objFramePrefix_, objFramePrefix_);
 
         ros::NodeHandle nh;
-        object_pub_ = nh.advertise<pr2016_msgs::BarCollisionObjectArray>("recognizedObjects", 1);
+        object_pub_ = nh.advertise<tams_ur5_bartender_msgs::BarCollisionObjectArray>("recognizedObjects", 1);
 
         sub_ = nh.subscribe("objectsStamped", 1, &BottleRecognition::objectsRecognizedCallback, this);
 
@@ -330,7 +330,7 @@ private:
     ros::Publisher object_pub_;
     XmlRpc::XmlRpcValue bottles;
     std::map <int, Bottle> data_bottles;
-    pr2016_msgs::BarCollisionObjectArray recObjectArr_;
+    tams_ur5_bartender_msgs::BarCollisionObjectArray recObjectArr_;
     std::map <std::string, ros::Time> bottle_timeout_;
     int bottle_cache_time;
 };

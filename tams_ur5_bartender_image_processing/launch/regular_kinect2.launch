@@ -7,9 +7,9 @@
         <node name="find_object_3d" pkg="find_object_2d" type="find_object_2d" output="log">
         <!-- set gui to false for production -->
         <param name="gui" value="false" type="bool"/>
-        <param name="settings_path" value="$(find project16_image_processing)/config/find_object_2d.ini" type="str"/>
+        <param name="settings_path" value="$(find tams_ur5_bartender_image_processing)/config/find_object_2d.ini" type="str"/>
         <param name="subscribe_depth" value="true" type="bool"/>
-        <param name="objects_path" value="$(find project16_image_processing)/objects_kinect2" type="str"/>
+        <param name="objects_path" value="$(find tams_ur5_bartender_image_processing)/objects_kinect2" type="str"/>
         <param name="object_prefix" value="object" type="str"/>
 
         <!-- nodes can have their own remap args -->
@@ -19,10 +19,10 @@
         </node>
     
     <!--Starting tams_pr16_bar_objects-->
-    <node pkg="project16_image_processing" type="tams_pr16_bar_objects" name="tams_pr16_bar_objects" output="log">
-        <rosparam command="load" file="$(find project16_image_processing)/config/bottles.yaml" />
+    <node pkg="tams_ur5_bartender_image_processing" type="bottle_recognition" name="bottle_recognition" output="log">
+        <rosparam command="load" file="$(find tams_ur5_bartender_image_processing)/config/bottles.yaml" />
     </node>
 
-    <node pkg="project16_image_processing" type="marker_publisher" name="marker_publisher" output="log"/>
+    <node pkg="tams_ur5_bartender_image_processing" type="bottle_publisher" name="bottle_publisher" output="log"/>
 
 </launch>
