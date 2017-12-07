@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <stdio.h>
 
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
@@ -55,9 +55,9 @@ public:
     ~GrabBottleTest(){
     }
 
-    bool executePick(moveit::planning_interface::MoveGroup& arm){
+    bool executePick(moveit::planning_interface::MoveGroupInterface& arm){
         arm.setSupportSurfaceName("table");
-        return arm.planGraspsAndPick("object");
+        return bool(arm.planGraspsAndPick("object"));
     }
 /*
     bool executePick(moveit_msgs::CollisionObject &object){
@@ -197,8 +197,8 @@ int main(int argc, char** argv){
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
-    moveit::planning_interface::MoveGroup gripper("gripper");
-    moveit::planning_interface::MoveGroup arm("arm");
+    moveit::planning_interface::MoveGroupInterface gripper("gripper");
+    moveit::planning_interface::MoveGroupInterface arm("arm");
 
     //arm.setPlannerId(arm.getDefaultPlannerId("arm"));
     arm.setPlannerId("RRTConnectkConfigDefault");
