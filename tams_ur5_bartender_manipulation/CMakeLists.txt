@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tams_ur5_bartender_manipulation)
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -15,7 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
 	moveit_visual_tools
 	moveit_planners_ompl
 	moveit_core
+	moveit_task_constructor_core
 	tf
+	tf_conversions
 )
 
 add_action_files(DIRECTORY action FILES PourBottle.action)
@@ -60,3 +62,8 @@ add_executable(pour_bottle_action_client src/pour_bottle_action_client.cpp)
 target_link_libraries(pour_bottle_action_client ${catkin_LIBRARIES})
 add_dependencies(pour_bottle_action_client ${${PROJECT_NAME}_EXPORTED_TARGETS})
 add_dependencies(pour_bottle_action_client ${catkin_EXPORTED_TARGETS})
+
+add_executable(pouring_task_construction src/experiments/pouring_task_construction.cpp)
+target_link_libraries(pouring_task_construction ${catkin_LIBRARIES})
+add_dependencies(pouring_task_construction ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_dependencies(pouring_task_construction ${catkin_EXPORTED_TARGETS})
