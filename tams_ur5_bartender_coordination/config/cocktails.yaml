@@ -31,6 +31,12 @@ cocktails:
             type: 'tequila'
             amount: 3.0
 - cocktail:
+    name: 'Tequila'
+    ingredients:
+        - ingr:
+            type: 'tequila'
+            amount: 2.0
+- cocktail:
     name: 'kiba'
     ingredients:
         - ingr:
