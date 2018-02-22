@@ -4,7 +4,7 @@ bottles:
     id: 1
     name: 'bacardi'
     height_bottle: 0.19
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.127
     radius_neck: 0.0175
     height_label: 0.095
@@ -14,7 +14,7 @@ bottles:
     id: 2
     name: 'tequila'
     height_bottle: 0.19
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.127
     radius_neck: 0.0175
     height_label: 0.095
@@ -24,7 +24,7 @@ bottles:
     id: 3
     name: 'vodka'
     height_bottle: 0.19
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.127
     radius_neck: 0.0175
     height_label: 0.095
@@ -34,7 +34,7 @@ bottles:
     id: 4
     name: 'gin'
     height_bottle: 0.19
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.127
     radius_neck: 0.0175
     height_label: 0.095
@@ -44,7 +44,7 @@ bottles:
     id: 5
     name: 'triple sec'
     height_bottle: 0.19
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.127
     radius_neck: 0.0175
     height_label: 0.095
@@ -54,7 +54,7 @@ bottles:
     id: 6
     name: 'cola'
     height_bottle: 0.18
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.142
     radius_neck: 0.0175
     height_label: 0.095
@@ -74,7 +74,7 @@ bottles:
     id: 8
     name: 'orange juice'
     height_bottle: 0.19
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.127
     radius_neck: 0.0175
     height_label: 0.095
@@ -94,7 +94,7 @@ bottles:
     id: 10
     name: 'dark rum'
     height_bottle: 0.18
-    radius_bottle: 0.0375
+    radius_bottle: 0.04
     height_neck: 0.135
     radius_neck: 0.0175
     height_label: 0.095
