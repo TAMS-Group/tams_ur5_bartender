@@ -193,7 +193,7 @@ public:
                 //calculate bottle offset
                 PoseStamped_bottle.header = msg->header;
                 PoseStamped_bottle.header.frame_id = os.str();
-                Point_bottle.x = -radius_bottle;
+                Point_bottle.x = -1.5*radius_bottle;
                 Point_bottle.y = 0;
                 Point_bottle.z = height_bottle / 2 - height_label;
                 Orient.w = 1.0;
