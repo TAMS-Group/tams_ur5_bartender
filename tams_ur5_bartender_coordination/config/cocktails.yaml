@@ -1,6 +1,27 @@
 # Cocktails
 cocktails:
 - cocktail:
+    name: 'Grape-O-juice'
+    ingredients:
+        - ingr:
+            type: 'orange juice'
+            amount: 10.0
+        - ingr:
+            type: 'grape juice'
+            amount: 10.0
+- cocktail:
+    name: 'Tequila Sunrise Grape'
+    ingredients:
+        - ingr:
+            type: 'tequila'
+            amount: 3.0
+        - ingr:
+            type: 'orange juice'
+            amount: 12.0
+        - ingr:
+            type: 'grape juice'
+            amount: 5.0
+- cocktail:
     name: 'TAMS virgin'
     ingredients:
         - ingr:
@@ -35,7 +56,7 @@ cocktails:
     ingredients:
         - ingr:
             type: 'tequila'
-            amount: 2.0
+            amount: 4.0
 - cocktail:
     name: 'kiba'
     ingredients:
@@ -50,6 +71,12 @@ cocktails:
     ingredients:
         - ingr:
             type: 'cola'
+            amount: 20.0
+- cocktail:
+    name: 'Grape Juice'
+    ingredients:
+        - ingr:
+            type: 'grape juice'
             amount: 20.0
 - cocktail:
     name: 'Orange Juice'
