@@ -34,4 +34,4 @@ include_directories(
 
 add_executable(bartender_coordination src/bartender_coordination.cpp)
 target_link_libraries (bartender_coordination ${catkin_LIBRARIES})
-add_dependencies(bartender_coordination ${catkin_EXPORTED_TARGETS})
+add_dependencies(bartender_coordination ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})

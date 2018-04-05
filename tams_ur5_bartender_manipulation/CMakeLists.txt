@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 	moveit_visual_tools
 	moveit_planners_ompl
 	moveit_core
+	tams_ur5_bartender_msgs
 	tf
 )
 
