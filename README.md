@@ -27,7 +27,7 @@ roslaunch tams_ur5_bartender bartender.launch
 
 The demo can be simulated and visualized in RVIZ completely by running
 ```
-roslaunch tams_ur5_coordination simulation.launch 
+roslaunch tams_ur5_bartender simulation.launch 
 ```
 
 
