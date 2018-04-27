@@ -62,10 +62,10 @@ bottles:
     pos_y: -0.7
 - bottle:
     id: 7
-    name: 'grenadine'
-    height_bottle: 0.21
+    name: 'grape juice'
+    height_bottle: 0.18
     radius_bottle: 0.04
-    height_neck: 0.094
+    height_neck: 0.135
     radius_neck: 0.0175
     height_label: 0.095
     pos_x: -0.8

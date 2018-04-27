@@ -914,6 +914,7 @@ int main(int argc, char** argv)
 	GrabPourPlace gpp;
 	ros::AsyncSpinner spinner(4);
 	spinner.start();
-	ros::spin();
+	while(ros::ok()){
+	}
 	return 0;
 }
