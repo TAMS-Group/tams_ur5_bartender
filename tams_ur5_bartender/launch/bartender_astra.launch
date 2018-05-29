@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Startup UR5 and Kinect -->
+    <include file="$(find tams_ur5_bartender)/launch/tams_ur5_setup_floor_astra.launch">
+        <arg name="ur5_joint_ranges_config" value="$(find tams_ur5_description)/config/joint_ranges/elbow_up.yaml"/>
+    </include>
+
+    <param name="move_group/constraint_approximations_path" value="$(find tams_ur5_bartender_manipulation)/cadb"/>
+    <param name="robotiq_s_model_action_server/gripper_mode" value="basic"/> <!-- bottle grip temporary fix -->
+
+    <!-- Startup image processing -->
+    <include file="$(find tams_ur5_bartender_image_processing)/launch/astra.launch"/>
+
+    <!-- Startup manipulation -->
+    <include file="$(find tams_ur5_bartender_manipulation)/launch/manipulation.launch"/>
+    
+    <!-- Startup coordination -->
+    <include file="$(find tams_ur5_bartender_coordination)/launch/coordination.launch"/>
+    
+    <!-- Startup GUI -->
+    <include file="$(find tams_ur5_bartender_gui)/launch/rosbridge.launch"/>
+    
+    <!-- Startup Rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find tams_ur5_bartender_coordination)/rviz/startup.rviz" />
+</launch>

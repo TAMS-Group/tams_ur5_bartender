@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<launch>
+        <include file="$(find tams_ur5_bringup)/launch/tams_ur5_drivers.launch">
+		<!-- <arg name="gripper_mode" value="wide_pinch"/> -->
+		<arg name="gripper_mode" value="basic"/>
+        </include>
+
+	<!-- This argument enables using a customized configuration of the ur5 joint ranges. 
+	     Example configuration files can be found inside tams_ur5_description under config/joint_ranges/. -->
+	<arg name="ur5_joint_ranges_config" default="$(find tams_ur5_description)/config/joint_ranges/elbow_up.yaml"/>
+        <include file="$(find tams_ur5_setup_description)/launch/tams_ur5_setup_upload.launch">
+		<arg name="joint_ranges_config" value="$(arg ur5_joint_ranges_config)"/>
+	</include>
+
+        <include file="$(find tams_ur5_setup_moveit_config)/launch/move_group.launch"/>
+
+	<include file="$(find astra_launch)/launch/astra.launch"/>
+
+
+<!-- apriltags2-->
+	<node pkg="apriltags2_ros" type="apriltags2_ros_continuous_node" name="apriltags2_ros_continuous_node" clear_params="true" > 
+	<!-- Remap topics from those used in code to those on the ROS network --> 
+	<remap from="image_rect" to="/camera/rgb/image_rect_color" /> 
+	<remap from="camera_info" to="/camera/rgb/camera_info" /> 
+
+	<param name="camera_frame" type="str" value="camera" /> 
+	<param name="publish_tag_detections_image" type="bool" value="false" />      <!-- default: false --> 
+
+	<rosparam command="load" file="$(find tams_ur5_setup_bringup)/config/apriltags2/settings.yaml"/> 
+	<rosparam command="load" file="$(find tams_ur5_setup_bringup)/config/apriltags2/tags.yaml"/> 
+	</node>
+
+
+
+<!-- camera positioner -->
+	<node pkg="camera_positioner" type="camera_positioner" name="camera_positioner">
+	<rosparam param="bundle_tags">[128, 154, 162, 164]</rosparam>
+                <param name="camera_rgb_optical_frame" value="camera_rgb_optical_frame"/>
+                <param name="camera_link" value="camera_link"/>
+	</node>
+</launch>
+
