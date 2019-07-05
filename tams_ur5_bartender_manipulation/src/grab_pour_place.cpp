@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ros/ros.h>
 #include <moveit/robot_state/robot_state.h>
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 #include <moveit_msgs/CollisionObject.h>
@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <moveit_msgs/ApplyPlanningScene.h>
 #include <moveit_msgs/Grasp.h>
 
-#include <manipulation_msgs/GraspPlanning.h>
+#include <tf/transform_datatypes.h>
 
 #include <cmath>
 
@@ -52,8 +52,8 @@ class GrabPourPlace  {
 		float pos[3]; 
 	};
 
-	moveit::planning_interface::MoveGroup arm;
-	moveit::planning_interface::MoveGroup gripper;
+	moveit::planning_interface::MoveGroupInterface arm;
+	moveit::planning_interface::MoveGroupInterface gripper;
 	moveit_visual_tools::MoveItVisualToolsPtr mvt;
 
 	protected: 
@@ -230,8 +230,8 @@ class GrabPourPlace  {
 			waypoints.push_back(target_pose);
 		}
 
-		moveit::planning_interface::MoveGroup::Plan pour_forward;
-		moveit::planning_interface::MoveGroup::Plan pour_backward;
+		moveit::planning_interface::MoveGroupInterface::Plan pour_forward;
+		moveit::planning_interface::MoveGroupInterface::Plan pour_backward;
 
 		moveit_msgs::RobotTrajectory trajectory;
 		moveit_msgs::RobotTrajectory trajectory_back;
@@ -271,7 +271,7 @@ class GrabPourPlace  {
 		pose.position.y = -0.2;
 		arm.setPoseTarget(pose);
 		ROS_INFO_STREAM("Moving to pose: " << pose);
-		moveit::planning_interface::MoveGroup::Plan plan;
+		moveit::planning_interface::MoveGroupInterface::Plan plan;
 	       	arm.plan(plan);
 		arm.execute(plan);
 
@@ -321,7 +321,7 @@ class GrabPourPlace  {
 		//plan with constraints 
 		arm.setPoseReferenceFrame("table_top");
 		arm.setPathConstraints(constraints);
-		moveit::planning_interface::MoveGroup::Plan plan;
+		moveit::planning_interface::MoveGroupInterface::Plan plan;
 	       	arm.plan(plan);
 		arm.clearPathConstraints();
 

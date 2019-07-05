@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <stdio.h>
 
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
@@ -36,8 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <moveit_msgs/Grasp.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 
-#include <manipulation_msgs/GraspPlanning.h>
- 
+#include <tf/transform_datatypes.h>
+
 #include <cmath>
 #include <ros/ros.h>
 class ConMotion {
@@ -49,7 +49,7 @@ int main(int argc, char** argv){
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
-    moveit::planning_interface::MoveGroup arm("arm");
+    moveit::planning_interface::MoveGroupInterface arm("arm");
 	arm.setPlannerId("RRTConnectkConfigDefault");
 	arm.setPlanningTime(20.0);
 

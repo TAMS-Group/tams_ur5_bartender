@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 
 #include <moveit/move_group_interface/move_group_interface.h>
 
+#include <tf/transform_datatypes.h>
+
 void jointValuesToJointTrajectory(std::map<std::string, double> target_values, ros::Duration duration, 
         trajectory_msgs::JointTrajectory &grasp_pose)
 {

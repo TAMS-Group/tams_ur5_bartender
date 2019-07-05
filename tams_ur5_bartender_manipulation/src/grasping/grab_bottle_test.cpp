@@ -34,8 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <moveit_msgs/ApplyPlanningScene.h>
 #include <moveit_msgs/Grasp.h>
 
-#include <manipulation_msgs/GraspPlanning.h>
-
 bool GRIPPER_TEST = false;
 
 class GrabBottleTest{

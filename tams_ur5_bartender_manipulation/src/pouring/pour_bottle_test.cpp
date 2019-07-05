@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ros/ros.h>
 
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/robot_state/conversions.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
@@ -41,6 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <moveit_msgs/Grasp.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
+
+#include <tf/transform_datatypes.h>
 
 #include <math.h>
 
@@ -166,7 +168,7 @@ class PourBottleTest{
 		return waypoints;
 	}
 
-	moveit::planning_interface::MoveGroup::Plan get_pour_bottle_plan(moveit::planning_interface::MoveGroup& arm, moveit::core::RobotState state, geometry_msgs::Pose& start_pose, moveit_msgs::CollisionObject bottle) {
+	moveit::planning_interface::MoveGroupInterface::Plan get_pour_bottle_plan(moveit::planning_interface::MoveGroupInterface& arm, moveit::core::RobotState state, geometry_msgs::Pose& start_pose, moveit_msgs::CollisionObject bottle) {
 		moveit_msgs::RobotState start_state;
 		moveit::core::robotStateToRobotStateMsg(state, start_state);
 		arm.setStartState(start_state);
@@ -202,7 +204,7 @@ class PourBottleTest{
 			}
 		}
 		arm.setStartStateToCurrentState();
-		moveit::planning_interface::MoveGroup::Plan result_plan;
+		moveit::planning_interface::MoveGroupInterface::Plan result_plan;
 		if(success_percentage > 0.95) {
 			result_plan.trajectory_ = trajectory;
 		}
@@ -224,8 +226,8 @@ int main(int argc, char** argv){
 	ros::AsyncSpinner spinner(1);
 	spinner.start();
 
-	moveit::planning_interface::MoveGroup gripper("gripper");
-	moveit::planning_interface::MoveGroup arm("arm");
+	moveit::planning_interface::MoveGroupInterface gripper("gripper");
+	moveit::planning_interface::MoveGroupInterface arm("arm");
 
 
 	arm.setNamedTarget("folded");
@@ -295,8 +297,8 @@ int main(int argc, char** argv){
 	}
 	*/
 
-	moveit::planning_interface::MoveGroup::Plan pour_forward = testClass.get_pour_bottle_plan(arm, (*arm.getCurrentState()), start_pose, bottle); 
-	moveit::planning_interface::MoveGroup::Plan pour_backward;
+	moveit::planning_interface::MoveGroupInterface::Plan pour_forward = testClass.get_pour_bottle_plan(arm, (*arm.getCurrentState()), start_pose, bottle); 
+	moveit::planning_interface::MoveGroupInterface::Plan pour_backward;
 
 	//reverse trajectory points
 	robot_trajectory::RobotTrajectory rTrajectory(arm.getRobotModel(),"arm");
